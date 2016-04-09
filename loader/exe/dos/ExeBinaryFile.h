@@ -71,7 +71,7 @@ typedef struct PACKED { /*      EXE file header          */
 } exeHeader;
 
 #ifdef _MSC_VER
-#pragma pack(0)
+#pragma pack()
 #endif
 
 class ExeBinaryFile : public QObject, public LoaderInterface {
