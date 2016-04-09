@@ -68,7 +68,7 @@ namespace dbghelp {
 }
 #endif
 #undef NO_ADDRESS
-#define NO_ADDRESS (ADDRESS::g(-1))
+#define NO_ADDRESS ADDRESS::g(~0u)
 #endif
 
 #include <sys/types.h>

@@ -101,7 +101,7 @@ Q_DECLARE_METATYPE(ADDRESS)
 #ifdef NO_ADDRESS
 #undef NO_ADDRESS
 #endif
-#define NO_ADDRESS (ADDRESS::g(-1)) // For invalid ADDRESSes
+#define NO_ADDRESS ADDRESS::g(~0u) // For invalid ADDRESSes
 
 typedef uint64_t QWord; // 64 bits
 

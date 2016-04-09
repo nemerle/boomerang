@@ -17,7 +17,7 @@
 #include <sstream>
 
 #undef NO_ADDRESS
-#define NO_ADDRESS ADDRESS::g(-1)
+#define NO_ADDRESS ADDRESS::g(~0u)
 
 Qt::HANDLE threadToCollect = 0;
 
