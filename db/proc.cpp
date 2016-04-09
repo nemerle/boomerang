@@ -5235,7 +5235,6 @@ void UserProc::updateForUseChange(std::set<UserProc *> &removeRetSet) {
         if (DEBUG_UNUSED)
             LOG << "%%%  parameters changed for " << getName() << "\n";
         std::set<CallStatement *> &callers = getCallers();
-        std::set<CallStatement *>::iterator cc;
         for (CallStatement *cc : callers) {
             cc->updateArguments();
             // Schedule the callers for analysis

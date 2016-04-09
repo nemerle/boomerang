@@ -48,7 +48,6 @@ void UserProc::dfaTypeAnalysis() {
     StatementList stmts;
     getStatements(stmts);
 
-    StatementList::iterator it;
     int iter;
     for (iter = 1; iter <= DFA_ITER_LIMIT; ++iter) {
         ch = false;
@@ -127,8 +126,7 @@ void UserProc::dfaTypeAnalysis() {
     Boomerang::get()->alert_decompile_debug_point(this, "before mapping locals from dfa type analysis");
     if (DEBUG_TA)
         LOG << " ### mapping expressions to local variables for " << getName() << " ###\n";
-    for (it = stmts.begin(); it != stmts.end(); ++it) {
-        Statement* s = *it;
+    for (Statement *it : stmts) {
         s->dfaMapLocals();
     }
     if (DEBUG_TA)
@@ -581,7 +579,7 @@ SharedType UnionType::meetWith(SharedType other, bool &ch, bool bHighestPtr) con
         LOG << "WARNING! attempt to union " << getCtype() << " with pointer to self!\n";
         return ((UnionType *)this)->shared_from_this();
     }
-    std::list<UnionElement>::iterator it;
+
 //    int subtypes_count = 0;
 //    for (it = li.begin(); it != li.end(); ++it) {
 //        Type &v(*it->type);

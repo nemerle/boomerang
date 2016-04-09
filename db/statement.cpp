@@ -3281,7 +3281,6 @@ void CallStatement::genConstraints(LocationSet & cons) {
         if ((name == "printf" || name == "scanf") && !(str = arg0->getAnyStrConst()).isNull()) {
             // actually have to parse it
             int n = 1; // Number of %s plus 1 = number of args
-            QString p = str;
             int percent_idx=0;
             while ((percent_idx = str.indexOf('%',percent_idx))!=-1) {
                 percent_idx++;
