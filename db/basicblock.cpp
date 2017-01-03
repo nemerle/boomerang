@@ -1484,6 +1484,8 @@ void BasicBlock::prependStmt(Instruction *s, UserProc *proc) {
     assert(ListOfRTLs);
     s->setBB(this);
     s->setProc(proc);
+    if (!ListOfRTLs)
+        ListOfRTLs = new std::list<RTL*>;
     if (!ListOfRTLs->empty()) {
         RTL *rtl = ListOfRTLs->front();
         if (rtl->getAddress().isZero()) {
@@ -2287,6 +2289,8 @@ void BasicBlock::processSwitch(UserProc *proc) {
  * Change the BB enclosing stmt to be CALL, not COMPCALL
  */
 bool BasicBlock::undoComputedBB(Instruction *stmt) {
+    if (!ListOfRTLs)
+        return false;
     RTL *last = ListOfRTLs->back();
     for (auto rr = last->rbegin(); rr != last->rend(); rr++) {
         if (*rr == stmt) {
