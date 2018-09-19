@@ -35,7 +35,6 @@
 #include "boomerang/visitor/expmodifier/CallBypasser.h"
 #include "boomerang/visitor/expmodifier/DFALocalMapper.h"
 #include "boomerang/visitor/expmodifier/ExpCastInserter.h"
-#include "boomerang/visitor/expmodifier/ExpConstCaster.h"
 #include "boomerang/visitor/expmodifier/ExpSSAXformer.h"
 #include "boomerang/visitor/expmodifier/ExpSubscripter.h"
 #include "boomerang/visitor/expmodifier/SizeStripper.h"
@@ -51,7 +50,6 @@
 #include "boomerang/visitor/stmtmodifier/StmtSSAXFormer.h"
 #include "boomerang/visitor/stmtmodifier/StmtSubscripter.h"
 #include "boomerang/visitor/stmtvisitor/StmtCastInserter.h"
-#include "boomerang/visitor/stmtvisitor/StmtConscriptSetter.h"
 
 #include <algorithm>
 #include <cassert>
@@ -524,33 +522,6 @@ bool Statement::isFpop() const
     }
 
     return static_cast<const Assign *>(this)->getRight()->getOper() == opFpop;
-}
-
-
-int Statement::setConscripts(int n)
-{
-    StmtConscriptSetter scs(n, false);
-
-    accept(&scs);
-    return scs.getLast();
-}
-
-
-void Statement::clearConscripts()
-{
-    StmtConscriptSetter scs(0, true);
-
-    accept(&scs);
-}
-
-
-bool Statement::castConst(int num, SharedType ty)
-{
-    ExpConstCaster ecc(num, ty);
-    StmtModifier scc(&ecc);
-
-    accept(&scc);
-    return ecc.isChanged();
 }
 
 

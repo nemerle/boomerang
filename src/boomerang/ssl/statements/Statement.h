@@ -312,19 +312,11 @@ public:
     /// Find all constants in this statement
     void findConstants(std::list<std::shared_ptr<Const>> &lc);
 
-    /// Set or clear the constant subscripts (using a visitor)
-    int setConscripts(int n);
-    void clearConscripts();
-
     /// Strip all size casts
     void stripSizes();
 
     /// For all expressions in this Statement, replace any e with e{def}
     void subscriptVar(SharedExp e, Statement *def /*, ProcCFG* cfg */);
-
-    // Cast the constant num to type ty. If a change was made, return true
-    // Cast the constant num to be of type ty. Return true if a change made
-    bool castConst(int num, SharedType ty);
 
     // Map expressions to locals
     void dfaMapLocals();

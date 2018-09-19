@@ -470,9 +470,6 @@ public:
     // which is probably not what is wanted!
     SharedExp fromSSAleft(UserProc *proc, Statement *d);
 
-    /// Set or clear the constant subscripts
-    void setConscripts(int n, bool clear);
-
     /// Strip size casts from an Exp
     SharedExp stripSizes();
 

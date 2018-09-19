@@ -25,11 +25,11 @@
 #include "boomerang/ssl/statements/CaseStatement.h"
 #include "boomerang/ssl/statements/CallStatement.h"
 #include "boomerang/ssl/statements/ReturnStatement.h"
-#include "boomerang/visitor/stmtvisitor/StmtConscriptSetter.h"
 #include "boomerang/frontend/pentium/PentiumFrontEnd.h"
 #include "boomerang/frontend/sparc/SPARCFrontEnd.h"
 #include "boomerang/ssl/type/IntegerType.h"
 #include "boomerang/util/log/Log.h"
+#include "boomerang/visitor/stmtvisitor/StmtVisitor.h"
 
 #include <sstream>
 
@@ -216,54 +216,6 @@ void RTLTest::testVisitor()
 //    pBF->UnLoad();
 //    delete pFE;
 // }
-
-
-void RTLTest::testSetConscripts()
-{
-    Prog prog("fake_prog", &m_project);
-    Module *module = prog.getOrInsertModule("test");
-    Function *proc = module->createFunction("printf", Address(0x2000)); // Making it a true library function is problematic
-
-    // m[1000] = m[1000] + 1000
-    Statement *s1 = new Assign(Location::memOf(Const::get(1000), nullptr),
-                               Binary::get(opPlus, Location::memOf(Const::get(1000), nullptr), Const::get(1000)));
-
-    // "printf("max is %d", (local0 > 0) ? local0 : global1)
-
-    CallStatement *s2   = new CallStatement();
-    ReturnStatement calleeReturn;
-
-    s2->setDestProc(proc);
-    s2->setCalleeReturn(&calleeReturn); // So it's not a childless call
-    SharedExp e1 = Const::get("max is %d");
-    SharedExp e2 = std::make_shared<Ternary>(opTern, Binary::get(opGtr, Location::local("local0", nullptr), Const::get(0)),
-                                             Location::local("local0", nullptr), Location::global("global1", nullptr));
-    StatementList args;
-    args.append(new Assign(Location::regOf(REG_SPARC_O0), e1));
-    args.append(new Assign(Location::regOf(REG_SPARC_O1), e2));
-    s2->setArguments(args);
-
-    RTL rtl(Address(0x1000), { s1, s2 });
-    StmtConscriptSetter sc(0, false);
-
-    for (Statement *s : rtl) {
-        s->accept(&sc);
-    }
-
-    QString     actual;
-    OStream ost(&actual);
-    rtl.print(ost);
-
-    QString expected("0x00001000    0 *v* m[1000\\1\\] := m[1000\\2\\] + 1000\\3\\\n"
-                    "              0 CALL printf(\n"
-                    "                *v* r8 := \"max is %d\"\\4\\\n"
-                    "                *v* r9 := (local0 > 0\\5\\) ? local0 : global1\n"
-                    "              )\n"
-                    "              Reaching definitions: <None>\n"
-                    "              Live variables: <None>\n");
-
-    compareLongStrings(actual, expected);
-}
 
 
 QTEST_GUILESS_MAIN(RTLTest)

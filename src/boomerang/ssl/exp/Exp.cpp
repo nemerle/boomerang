@@ -31,7 +31,6 @@
 #include "boomerang/util/Util.h"
 #include "boomerang/util/log/Log.h"
 #include "boomerang/visitor/expmodifier/CallBypasser.h"
-#include "boomerang/visitor/expmodifier/ConscriptSetter.h"
 #include "boomerang/visitor/expmodifier/ExpAddressSimplifier.h"
 #include "boomerang/visitor/expmodifier/ExpArithSimplifier.h"
 #include "boomerang/visitor/expmodifier/ExpPropagator.h"
@@ -479,13 +478,6 @@ SharedExp Exp::fromSSAleft(UserProc *proc, Statement *def)
     ExpSSAXformer xformer(proc);
     SharedExp result = r->acceptModifier(&xformer);
     return result;
-}
-
-
-void Exp::setConscripts(int n, bool clear)
-{
-    ConscriptSetter sc(n, clear);
-    this->acceptModifier(&sc);
 }
 
 

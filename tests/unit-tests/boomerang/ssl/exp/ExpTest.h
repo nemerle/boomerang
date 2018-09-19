@@ -120,9 +120,6 @@ private slots:
     /// Test opTypeOf and TypeVal (type values)
     void testTypeOf();
 
-    /// Test setting and printing of constant "subscripts"
-    void testSetConscripts();
-
     /// Test finding the locations used by an expression
     void testAddUsedLocs();
     void testAddUsedLocs_data();

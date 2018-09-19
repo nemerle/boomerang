@@ -115,9 +115,6 @@ public:
     /// \copydoc Exp::descendType
     virtual void descendType(SharedType parentType, bool &changed, Statement *s) override;
 
-    int getConscript() const { return m_conscript; }
-    void setConscript(int cs) { m_conscript = cs; }
-
 public:
     /// \copydoc Exp::acceptVisitor
     virtual bool acceptVisitor(ExpVisitor *v) override;
@@ -132,6 +129,5 @@ protected:
 private:
     Data m_value;        ///< The value of this constant
     QString m_string;    ///< The string value of this constant
-    int m_conscript = 0; ///< like a subscript for constants
     SharedType m_type;   ///< Constants need types during type analysis
 };

@@ -690,28 +690,6 @@ void ExpTest::testTypeOf()
 }
 
 
-void ExpTest::testSetConscripts()
-{
-    // m[1000] + 1000
-    SharedExp e = Binary::get(opPlus, Location::memOf(Const::get(1000), nullptr), Const::get(1000));
-    e->setConscripts(0, false);
-    QCOMPARE(e->toString(), QString("m[1000\\1\\] + 1000\\2\\"));
-
-    // Clear them
-    e->setConscripts(0, true);
-    QCOMPARE(e->toString(), QString("m[1000] + 1000"));
-
-    // m[r28 + 1000]
-    e      = Location::memOf(Binary::get(opPlus, Location::regOf(REG_PENT_ESP), Const::get(1000)));
-    e->setConscripts(0, false);
-    QCOMPARE(e->toString(), QString("m[r28 + 1000\\1\\]"));
-
-    // Clear
-    e->setConscripts(0, true);
-    QCOMPARE(e->toString(), QString("m[r28 + 1000]"));
-}
-
-
 void ExpTest::testAddUsedLocs()
 {
     QFETCH(SharedExpWrapper, usedExp);

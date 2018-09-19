@@ -23,7 +23,6 @@
 
 Const::Const(uint32_t i)
     : Exp(opIntConst)
-    , m_conscript(0)
     , m_type(VoidType::get())
 {
     m_value.i = i;
@@ -32,7 +31,6 @@ Const::Const(uint32_t i)
 
 Const::Const(int i)
     : Exp(opIntConst)
-    , m_conscript(0)
     , m_type(VoidType::get())
 {
     m_value.i = i;
@@ -41,7 +39,6 @@ Const::Const(int i)
 
 Const::Const(QWord ll)
     : Exp(opLongConst)
-    , m_conscript(0)
     , m_type(VoidType::get())
 {
     m_value.ll = ll;
@@ -50,7 +47,6 @@ Const::Const(QWord ll)
 
 Const::Const(double d)
     : Exp(opFltConst)
-    , m_conscript(0)
     , m_type(VoidType::get())
 {
     m_value.d = d;
@@ -59,7 +55,6 @@ Const::Const(double d)
 
 Const::Const(const QString &p)
     : Exp(opStrConst)
-    , m_conscript(0)
     , m_type(VoidType::get())
 {
     m_string = p;
@@ -68,7 +63,6 @@ Const::Const(const QString &p)
 
 Const::Const(Function *p)
     : Exp(opFuncConst)
-    , m_conscript(0)
     , m_type(VoidType::get())
 {
     m_value.pp = p;
@@ -77,7 +71,6 @@ Const::Const(Function *p)
 
 Const::Const(Address addr)
     : Exp(opIntConst)
-    , m_conscript(0)
     , m_type(VoidType::get())
 {
     m_value.ll = addr.value();
@@ -87,7 +80,6 @@ Const::Const(Address addr)
 Const::Const(const Const &other)
     : Exp(other.m_oper)
     , m_string(other.m_string)
-    , m_conscript(other.m_conscript)
     , m_type(other.m_type)
 {
     memcpy(&m_value, &other.m_value, sizeof(m_value));
@@ -101,10 +93,6 @@ bool Const::operator<(const Exp &o) const
     }
 
     const Const &otherConst = static_cast<const Const &>(o);
-
-    if (m_conscript != otherConst.m_conscript) {
-        return m_conscript < otherConst.m_conscript;
-    }
 
     switch (m_oper) {
     case opIntConst: return m_value.i < otherConst.m_value.i;
@@ -171,11 +159,6 @@ bool Const::operator==(const Exp &other) const
     }
 
     if (m_oper != other.getOper()) {
-        return false;
-    }
-
-    if ((m_conscript && (m_conscript != static_cast<const Const &>(other).m_conscript)) ||
-        static_cast<const Const &>(other).m_conscript) {
         return false;
     }
 

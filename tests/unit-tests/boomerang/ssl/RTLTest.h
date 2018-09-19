@@ -27,7 +27,4 @@ private slots:
     /// Test the accept function for correct visiting behaviour.
     /// \note Stub class to test.
     void testVisitor();
-
-
-    void testSetConscripts();
 };
