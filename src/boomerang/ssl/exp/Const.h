@@ -127,7 +127,7 @@ protected:
     virtual SharedExp acceptPostModifier(ExpModifier *mod) override;
 
 private:
-    Data m_value;        ///< The value of this constant
-    QString m_string;    ///< The string value of this constant
-    SharedType m_type;   ///< Constants need types during type analysis
+    Data m_value;      ///< The value of this constant
+    QString m_string;  ///< The string value of this constant
+    SharedType m_type; ///< Constants need types during type analysis
 };
