@@ -557,8 +557,8 @@ void ElfBinaryLoader::addSymbolsForSection(int secIndex)
         return;
     }
     else if (section.Size == 0 || (section.Size % section.entry_size) != 0) {
-        LOG_WARN("Cannot add symbols for section %1: Invalid section size %2 (zero or not divisibe "
-                 "by %3)",
+        LOG_WARN("Cannot add symbols for section %1: Invalid section size %2 "
+                 "(zero or not divisible by %3)",
                  secIndex, section.Size, section.entry_size);
         return;
     }
@@ -665,11 +665,10 @@ void ElfBinaryLoader::addRelocsAsSyms(uint32_t relSecIdx)
 
         QString symbolName = getStrPtr(strSecIdx, elfRead4(&m_symbolSection[symIndex].st_name));
 
-        symbolName = symbolName.left(
-            symbolName.indexOf("@@")); // Hack off the "@@GLIBC_2.0" of Linux, if present
+        // Hack off the "@@GLIBC_2.0" of Linux, if present
+        symbolName = symbolName.left(symbolName.indexOf("@@"));
 
-        std::map<Address, QString>::iterator it;
-        auto symbol = m_symbols->findSymbolByName(symbolName);
+        const BinarySymbol *symbol = m_symbols->findSymbolByName(symbolName);
         // Add new extern
         Address location = symbol ? symbol->getLocation() : m_nextExtern;
 
@@ -859,34 +858,31 @@ void ElfBinaryLoader::applyRelocations()
     const Elf32_Half machine = elfRead2(&m_elfHeader->e_machine);
     const Elf32_Half e_type  = elfRead2(&m_elfHeader->e_type);
 
-    switch (machine) {
-    case EM_SPARC:
+    for (size_t i = 1; i < m_elfSections.size(); ++i) {
+        const SectionParam &ps(m_elfSections[i]);
+        if (ps.sectionType == SHT_RELA) {
+            const Elf32_Rela *relaEntries = reinterpret_cast<const Elf32_Rela *>(
+                ps.imagePtr.value());
+            const DWord numEntries = ps.Size / sizeof(Elf32_Rela);
 
-        for (size_t i = 1; i < m_elfSections.size(); ++i) {
-            const SectionParam &ps(m_elfSections[i]);
+            if (relaEntries == nullptr) {
+                LOG_WARN("Cannot read relocation entries from invalid section %1", i);
+                continue;
+            }
+            else if (ps.Size % sizeof(Elf32_Rela) != 0) {
+                LOG_WARN("Cannot read relocation entries from section %1 with invalid size %2 "
+                         "(must be divisible by %3)",
+                         i, ps.Size, sizeof(Elf32_Rela));
+                continue;
+            }
 
-            if ((ps.sectionType != SHT_REL) && (ps.sectionType == SHT_RELA)) {
-                const Elf32_Rela *relaEntries = reinterpret_cast<const Elf32_Rela *>(
-                    ps.imagePtr.value());
-                const DWord numEntries = ps.Size / sizeof(Elf32_Rela);
-
-                if (relaEntries == nullptr) {
-                    LOG_WARN("Cannot read relocation entries from invalid section %1", i);
-                    continue;
-                }
-                else if (ps.Size % sizeof(Elf32_Rela) != 0) {
-                    LOG_WARN("Cannot read relocation entries from section %1 with invalid size %2 "
-                             "(must be divisible by %3)",
-                             i, ps.Size, sizeof(Elf32_Rela));
-                    continue;
-                }
-
+            switch (machine) {
+            case EM_SPARC:
                 // NOTE: the r_offset is different for .o files (E_REL in the e_type header field)
                 // than for exe's and shared objects!
                 for (DWord u = 0; u < numEntries; u++) {
                     Elf32_Byte relType = ELF32_R_TYPE(elfRead4(&relaEntries[u].r_info));
-                    //                  Elf32_Word symTabIndex =
-                    //                  ELF32_R_SYM(elfRead4(&relaEntries[u].r_info));
+                    // Elf32_Word symTabIndex = ELF32_R_SYM(elfRead4(&relaEntries[u].r_info));
 
                     switch (relType) {
                     case R_SPARC_NONE: // just ignore (common)
@@ -901,126 +897,120 @@ void ElfBinaryLoader::applyRelocations()
                     default: LOG_WARN("Unhandled SPARC relocation type %1", relType); break;
                     }
                 }
+                break;
+
+            default: LOG_WARN("Unhandled relocation!"); break;
             }
         }
+        else if (ps.sectionType == SHT_REL) {
+            // A section such as .rel.dyn or .rel.plt (without an addend field).
+            // Each entry has 2 words: r_offet and r_info. The r_offset is just the offset from
+            // the beginning of the section (section given by the section header's sh_info) to
+            // the word to be modified. r_info has the type in the bottom byte, and a symbol
+            // table index in the top 3 bytes. A symbol table offset of 0 (STN_UNDEF) means use
+            // value 0. The symbol table involved comes from the section header's sh_link field.
 
-        LOG_WARN("Unhandled relocation!");
-        break; // Not implemented yet
+            // NOTE: the r_offset is different for .o files (E_REL in the e_type header field)
+            // than for exe's and shared objects!
+            Address destNatOrigin      = Address::ZERO;
+            HostAddress destHostOrigin = HostAddress::ZERO;
 
-    case EM_386:
+            if (e_type == ET_REL) {
+                Elf32_Word destSection = m_shInfo[i];
+                if (!Util::inRange(destSection, 0UL, m_elfSections.size())) {
+                    continue;
+                }
+                destNatOrigin  = m_elfSections[destSection].SourceAddr;
+                destHostOrigin = m_elfSections[destSection].imagePtr;
+            }
 
-        for (size_t i = 1; i < m_elfSections.size(); ++i) {
-            const SectionParam &ps(m_elfSections[i]);
+            // Section index for the associated symbol table
+            const uint32 symSectionIdx = m_shLink[i];
+            if (!Util::inRange(symSectionIdx, 0UL, m_elfSections.size())) {
+                continue;
+            }
 
-            if (ps.sectionType == SHT_REL) {
-                // A section such as .rel.dyn or .rel.plt (without an addend field).
-                // Each entry has 2 words: r_offet and r_info. The r_offset is just the offset from
-                // the beginning of the section (section given by the section header's sh_info) to
-                // the word to be modified. r_info has the type in the bottom byte, and a symbol
-                // table index in the top 3 bytes. A symbol table offset of 0 (STN_UNDEF) means use
-                // value 0. The symbol table involved comes from the section header's sh_link field.
+            // Section index for the string section assoc with this
+            const uint32 strSectionIdx = m_shLink[symSectionIdx];
+            if (!Util::inRange(strSectionIdx, 0UL, m_elfSections.size())) {
+                continue;
+            }
 
-                // NOTE: the r_offset is different for .o files (E_REL in the e_type header field)
-                // than for exe's and shared objects!
-                Address destNatOrigin      = Address::ZERO;
-                HostAddress destHostOrigin = HostAddress::ZERO;
+            const char *strSection = reinterpret_cast<const char *>(
+                m_elfSections[strSectionIdx].imagePtr.value());
+            const Elf32_Sym *assocSymbols = reinterpret_cast<const Elf32_Sym *>(
+                m_elfSections[symSectionIdx].imagePtr.value());
+
+            const Elf32_Rel *relEntries = reinterpret_cast<const Elf32_Rel *>(ps.imagePtr.value());
+            const DWord numEntries      = ps.Size / sizeof(Elf32_Rel);
+            if (ps.Size % sizeof(Elf32_Rel) != 0) {
+                LOG_WARN("Invalid size %1 of relocation section %2 (must be divisible by %3)",
+                         ps.Size, i, sizeof(Elf32_Rel));
+                continue;
+            }
+
+            for (unsigned u = 0; u < numEntries; u++) {
+                const Elf32_Addr r_offset  = elfRead4(&relEntries[u].r_offset);
+                const Elf32_Byte relType   = ELF32_R_TYPE(elfRead4(&relEntries[u].r_info));
+                const Elf32_Word symbolIdx = ELF32_R_SYM(elfRead4(&relEntries[u].r_info));
+
+                DWord *relocDestination; // Pointer to the word to be relocated
 
                 if (e_type == ET_REL) {
-                    Elf32_Word destSection = m_shInfo[i];
-                    if (!Util::inRange(destSection, 0UL, m_elfSections.size())) {
+                    if (!Util::inRange(r_offset, 0UL, m_loadedImageSize)) {
+                        LOG_WARN("Not loading symbol number %1 due to invalid offset %2", u,
+                                 r_offset);
                         continue;
                     }
-                    destNatOrigin  = m_elfSections[destSection].SourceAddr;
-                    destHostOrigin = m_elfSections[destSection].imagePtr;
+                    relocDestination = reinterpret_cast<DWord *>(
+                        (destHostOrigin + r_offset).value());
                 }
-
-                const uint32
-                    symSection = m_shLink[i]; // Section index for the associated symbol table
-                if (!Util::inRange(symSection, 0UL, m_elfSections.size())) {
-                    continue;
-                }
-                const uint32 strSectionIdx = m_shLink[symSection]; // Section index for the string
-                                                                   // section assoc with this
-                if (!Util::inRange(strSectionIdx, 0UL, m_elfSections.size())) {
-                    continue;
-                }
-                const char *strSection = reinterpret_cast<const char *>(
-                    m_elfSections[strSectionIdx].imagePtr.value());
-                const Elf32_Sym *symOrigin = reinterpret_cast<const Elf32_Sym *>(
-                    m_elfSections[symSection].imagePtr.value());
-
-                const Elf32_Rel *relEntries = reinterpret_cast<const Elf32_Rel *>(
-                    ps.imagePtr.value());
-                const DWord numEntries = ps.Size / sizeof(Elf32_Rel);
-                if (ps.Size % sizeof(Elf32_Rel) != 0) {
-                    LOG_WARN("Invalid size %1 of relocation section %2 (must be divisible by %3)",
-                             ps.Size, i, sizeof(Elf32_Rel));
-                    continue;
-                }
-
-                for (unsigned u = 0; u < numEntries; u++) {
-                    const Elf32_Addr r_offset    = elfRead4(&relEntries[u].r_offset);
-                    const Elf32_Byte relType     = ELF32_R_TYPE(elfRead4(&relEntries[u].r_info));
-                    const Elf32_Word symTabIndex = ELF32_R_SYM(elfRead4(&relEntries[u].r_info));
-
-                    DWord *relocDestination; // Pointer to the word to be relocated
-
-                    if (e_type == ET_REL) {
-                        if (!Util::inRange(r_offset, 0UL, m_loadedImageSize)) {
-                            LOG_WARN("Not loading symbol number %1 due to invalid offset %2", u,
-                                     r_offset);
-                            continue;
-                        }
-                        relocDestination = reinterpret_cast<DWord *>(
-                            (destHostOrigin + r_offset).value());
+                else {
+                    const BinarySection *destSec = m_binaryImage->getSectionByAddr(
+                        Address(r_offset));
+                    if (!destSec) {
+                        LOG_WARN("Not loading symbol number %1 due to invalid offset %2", u,
+                                 r_offset);
+                        continue;
                     }
-                    else {
-                        const BinarySection *destSec = m_binaryImage->getSectionByAddr(
-                            Address(r_offset));
-                        if (!destSec) {
-                            LOG_WARN("Not loading symbol number %1 due to invalid offset %2", u,
-                                     r_offset);
-                            continue;
-                        }
-                        relocDestination = reinterpret_cast<DWord *>(
-                            (destSec->getHostAddr() - destSec->getSourceAddr() + r_offset).value());
-                        destNatOrigin = Address::ZERO;
+                    relocDestination = reinterpret_cast<DWord *>(
+                        (destSec->getHostAddr() - destSec->getSourceAddr() + r_offset).value());
+                    destNatOrigin = Address::ZERO;
+                }
+
+                Address A = Address(elfRead4(relocDestination));
+                Address P = destNatOrigin + r_offset;
+                Address S = Address(elfRead4(&assocSymbols[symbolIdx].st_value));
+
+                if (e_type == ET_REL) {
+                    const Elf32_Half sectionIdx = elfRead2(&assocSymbols[symbolIdx].st_shndx);
+
+                    if (sectionIdx < m_elfSections.size()) {
+                        S += m_elfSections[sectionIdx].SourceAddr;
                     }
+                }
 
-                    Address A = Address(elfRead4(relocDestination));
-                    Address S = Address::ZERO;
-                    Address P = destNatOrigin + r_offset;
-
+                switch (machine) {
+                case EM_386:
                     switch (relType) {
                     case R_386_NONE: break;
 
                     case R_386_32: // S + A
-                        S = Address(elfRead4(&symOrigin[symTabIndex].st_value));
-
-                        if (e_type == ET_REL) {
-                            const Elf32_Half sectionIdx = elfRead2(
-                                &symOrigin[symTabIndex].st_shndx);
-
-                            if (sectionIdx < m_elfSections.size()) {
-                                S += m_elfSections[sectionIdx].SourceAddr;
-                            }
-                        }
-
                         elfWrite4(relocDestination, (S + A).value());
                         break;
 
                     case R_386_PC32: // S + A - P
-
-                        if (ELF32_ST_TYPE(symOrigin[symTabIndex].st_info) == STT_SECTION) {
+                        if (ELF32_ST_TYPE(assocSymbols[symbolIdx].st_info) == STT_SECTION) {
+                            S                           = Address::ZERO;
                             const Elf32_Half sectionIdx = elfRead2(
-                                &symOrigin[symTabIndex].st_shndx);
+                                &assocSymbols[symbolIdx].st_shndx);
 
                             if (sectionIdx < m_elfSections.size()) {
                                 S += m_elfSections[sectionIdx].SourceAddr;
                             }
                         }
                         else {
-                            S = Address(elfRead4(&symOrigin[symTabIndex].st_value));
+                            S = Address(elfRead4(&assocSymbols[symbolIdx].st_value));
 
                             if (S.isZero()) {
                                 // This means that the symbol doesn't exist in this module, and is
@@ -1031,22 +1021,18 @@ void ElfBinaryLoader::applyRelocations()
                                 // very improbable addresses (e.g. -1, -2, etc) and give them
                                 // entries in the symbol table
                                 DWord nameOffset       = elfRead4(reinterpret_cast<const DWord *>(
-                                    &symOrigin[symTabIndex].st_name));
+                                    &assocSymbols[symbolIdx].st_name));
                                 const char *symbolName = strSection + nameOffset;
 
-                                // this is too slow, I'm just going to assume it is 0
-                                // S = GetAddressByName(symbolName);
-                                // if (S == (e_type == E_REL ? 0x8000000 : 0)) {
-                                S = Address(
-                                    (static_cast<int>(nextFakeLibAddr--)) &
-                                    Address::getSourceMask()); // Allocate a new fake address
+                                // Allocate a new fake address
+                                S = Address((nextFakeLibAddr--) & Address::getSourceMask());
                                 BinarySymbol *newFunction = m_symbols->createSymbol(S, symbolName);
                                 newFunction->setAttribute("Function", true);
                                 newFunction->setAttribute("Imported", true);
-                                // }
                             }
                             else if (e_type == ET_REL) {
-                                const SWord sectionIdx = elfRead2(&symOrigin[symTabIndex].st_shndx);
+                                const SWord sectionIdx = elfRead2(
+                                    &assocSymbols[symbolIdx].st_shndx);
 
                                 if (sectionIdx < m_elfSections.size()) {
                                     S += m_elfSections[sectionIdx].SourceAddr;
@@ -1063,15 +1049,13 @@ void ElfBinaryLoader::applyRelocations()
                         // No need to do anything with these, if a shared object
                         break;
 
-                    default: LOG_WARN("Unknown x86 relocation type %1", static_cast<int>(relType));
+                    default:
+                        LOG_WARN("Unhandled x86 relocation type %1", static_cast<int>(relType));
                     }
+                default: LOG_WARN("Unhandled relocation!"); break;
                 }
             }
         }
-
-        break;
-
-    default: break; // Not implemented
     }
 }
 
@@ -1136,7 +1120,6 @@ bool ElfBinaryLoader::isRelocationAt(Address addr)
 
         break;
 
-    case EM_SPARC:
     default: LOG_WARN("Unhandled relocation!"); break; // Not implemented yet
     }
 
