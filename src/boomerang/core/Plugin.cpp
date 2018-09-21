@@ -11,7 +11,7 @@
 
 #include <cassert>
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
 #    include "Windows.h"
 #else
 #    include <dlfcn.h>
@@ -20,7 +20,7 @@
 
 PluginHandle::PluginHandle(const QString &filePath)
 {
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
     m_handle = LoadLibrary(qPrintable(filePath));
 
     if (m_handle == nullptr) {
@@ -38,7 +38,7 @@ PluginHandle::PluginHandle(const QString &filePath)
 
 PluginHandle::~PluginHandle()
 {
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
     FreeLibrary((HMODULE)m_handle);
 #else
     dlclose(m_handle);
@@ -48,8 +48,8 @@ PluginHandle::~PluginHandle()
 
 PluginHandle::Symbol PluginHandle::getSymbol(const char *name) const
 {
-#ifdef _MSC_VER
-    return GetProcAddress((HMODULE)m_handle, name);
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
+    return (PluginHandle::Symbol)GetProcAddress((HMODULE)m_handle, name);
 #else
     return dlsym(m_handle, name);
 #endif

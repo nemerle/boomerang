@@ -32,10 +32,12 @@
 #    include <windows.h>
 #    ifndef __MINGW32__
 namespace dbghelp
-#    endif
 {
+#    endif
 #    include <dbghelp.h>
+#    ifndef __MINGW32__
 }
+#    endif
 #endif
 
 
