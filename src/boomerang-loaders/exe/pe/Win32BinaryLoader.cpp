@@ -22,15 +22,13 @@
  * 24 Jul 05 - Mike: State machine to recognize main in Borland Builder files
  */
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__MINGW32__) && !defined(__MINGW64__)
 #    define NOMINMAX
 #    include <windows.h>
-#    ifndef __MINGW32__
 namespace dbghelp
 {
-#        include <dbghelp.h>
+#    include <dbghelp.h>
 }
-#    endif
 #endif
 
 #include "Win32BinaryLoader.h"
