@@ -938,8 +938,10 @@ void ElfBinaryLoader::applyRelocations()
 
             const char *strSection = reinterpret_cast<const char *>(
                 m_elfSections[strSectionIdx].imagePtr.value());
-            const Elf32_Sym *assocSymbols = reinterpret_cast<const Elf32_Sym *>(
-                m_elfSections[symSectionIdx].imagePtr.value());
+            const Elf32_Sym *assocSymbols = symSectionIdx != 0
+                                                ? reinterpret_cast<const Elf32_Sym *>(
+                                                      m_elfSections[symSectionIdx].imagePtr.value())
+                                                : nullptr;
 
             const Elf32_Rel *relEntries = reinterpret_cast<const Elf32_Rel *>(ps.imagePtr.value());
             const DWord numEntries      = ps.Size / sizeof(Elf32_Rel);
@@ -980,9 +982,11 @@ void ElfBinaryLoader::applyRelocations()
 
                 Address A = Address(elfRead4(relocDestination));
                 Address P = destNatOrigin + r_offset;
-                Address S = Address(elfRead4(&assocSymbols[symbolIdx].st_value));
+                Address S = assocSymbols != nullptr
+                                ? Address(elfRead4(&assocSymbols[symbolIdx].st_value))
+                                : Address::ZERO;
 
-                if (e_type == ET_REL) {
+                if (e_type == ET_REL && assocSymbols != nullptr) {
                     const Elf32_Half sectionIdx = elfRead2(&assocSymbols[symbolIdx].st_shndx);
 
                     if (sectionIdx < m_elfSections.size()) {
