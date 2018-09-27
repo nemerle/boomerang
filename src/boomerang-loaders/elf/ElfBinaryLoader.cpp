@@ -1052,6 +1052,8 @@ void ElfBinaryLoader::applyRelocations()
                     default:
                         LOG_WARN("Unhandled x86 relocation type %1", static_cast<int>(relType));
                     }
+                    break;
+
                 default: LOG_WARN("Unhandled relocation!"); break;
                 }
             }
