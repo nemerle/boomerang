@@ -64,4 +64,12 @@ When the regression test suite finds a regression in the output, it is shown as 
 If you have not modified Boomerang, please file the regression(s) as a bug report at https://github.com/BoomerangDecompiler/boomerang/issues.
 
 
+# Contributing
+
+Boomerang uses the [gitflow workflow](https://nvie.com/posts/a-successful-git-branching-model/). If you want to fix a bug or implement a small enhancement,
+please branch off from the `develop` branch (`git checkout -b`) and submit your fix or enhancement as a pull request to the `develop` branch.
+If you want to implement a larger feature, please open an issue about the new feature on the issue tracker first, so the feature can be discussed first.
+For additional information, please read the [contributing guidelines](https://github.com/BoomerangDecompiler/boomerang/blob/develop/Contributing.md).
+
 Thanks for your interest in the Boomerang Decompiler!
+
