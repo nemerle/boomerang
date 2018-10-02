@@ -1,7 +1,8 @@
 # Boomerang Decompiler
 
-This is a fork of the [Boomerang Decompiler](http://boomerang.sourceforge.net/).
+This is a fork of the [Boomerang Decompiler](http://boomerang.sourceforge.net/), a general, open source (BSD licensed) machine code decompiler.
 Right now, there are no pre-compiled binaries available, so you'll have to compile from source yourself.
+
 
 ## Building
 
@@ -10,19 +11,21 @@ Right now, there are no pre-compiled binaries available, so you'll have to compi
 |    **develop**   | [![Travis CI](https://api.travis-ci.com/BoomerangDecompiler/boomerang.svg?branch=develop)](https://travis-ci.com/BoomerangDecompiler/boomerang) | [![Appveyor](https://ci.appveyor.com/api/projects/status/9ftcn56cys23784j/branch/develop?svg=true)](https://ci.appveyor.com/project/nemerle/boomerang/branch/develop) | [![codecov](https://codecov.io/gh/BoomerangDecompiler/boomerang/branch/develop/graph/badge.svg)](https://codecov.io/gh/BoomerangDecompiler/boomerang/branch/develop) |
 |    **master**    | [![Travis CI](https://api.travis-ci.com/BoomerangDecompiler/boomerang.svg?branch=master)](https://travis-ci.com/BoomerangDecompiler/boomerang)  | [![Appveyor](https://ci.appveyor.com/api/projects/status/9ftcn56cys23784j/branch/master?svg=true)](https://ci.appveyor.com/project/nemerle/boomerang/branch/master)   | [![codecov](https://codecov.io/gh/BoomerangDecompiler/boomerang/branch/master/graph/badge.svg)](https://codecov.io/gh/BoomerangDecompiler/boomerang/branch/master)   |
 
+
 ### Building prerequisites
 
  - A 64 bit operating system (32 bit might or might not work, but it is not supported.)
- - A C++ compiler compatible with C++17 (GCC \>= 7, Clang \>= 5, MSVC \>= 2017 are known to work)
+ - A C++ compiler compatible with C++17 (GCC 7+, Clang 5+, MSVC 2017+ are known to work)
  - [CMake 3.8.0 or newer](https://cmake.org/download/)
- - [Qt5](https://www.qt.io/download-open-source/)
+ - [Qt5](https://www.qt.io/download-open-source/) (Qt 5.9+ is known to work, earlier versions should also work)
  - [Doxygen 1.8.13 or newer](http://www.doxygen.nl/) (optional, for documentation)
  - [Python 3](https://www.python.org/downloads/) (optional, for regression tests)
 
+
 ### Building on Linux
 
-On a Linux system you can build Boomerang with the usual cmake-make-make-install procedure.
-On a Debian-compatible system these commands will clone, build and install Boomerang:
+On a Linux system you can build and install Boomerang with the usual cmake-make-make-install procedure.
+On a Debian-compatible system (e.g. Ubuntu) these commands will clone, build and install Boomerang:
 
 ```bash
 sudo apt-get install git build-essential cmake qt5-default
@@ -32,6 +35,7 @@ cd boomerang && mkdir build && cd build
 cmake .. && make && make install
 ```
 
+
 ### Building on Windows
 
 To compile on Windows, it should be enough to run cmake-gui and fill in the paths to missing libraries if CMake does not find them.
@@ -39,7 +43,7 @@ To compile on Windows, it should be enough to run cmake-gui and fill in the path
 
 ### Building on macOS
 
-Building on macOS is currently not supported. However, patches or pull requests on this matter are welcome.
+Building on macOS is currently not supported. However, patches or pull requests on this matter are welcome. See also issue #39.
 
 
 ## Testing
@@ -48,6 +52,7 @@ Building on macOS is currently not supported. However, patches or pull requests 
 
 Boomerang has a unit test suite, which can be run by `make && make test` on Linux or by running the RUN_TESTS target in Visual Studio.
 Make sure you have the BOOMERANG_BUILD_UNIT_TESTS option set in CMake.
+
 
 ### Regression tests
 
