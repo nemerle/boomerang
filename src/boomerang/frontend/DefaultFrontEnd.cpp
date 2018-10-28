@@ -790,8 +790,9 @@ bool DefaultFrontEnd::decodeSingleInstruction(Address pc, DecodeResult &result)
     try {
         return m_decoder->decodeInstruction(pc, host_native_diff, result);
     }
-    catch (std::invalid_argument &e) {
+    catch (std::runtime_error &e) {
         LOG_ERROR("%1", e.what());
+        result.valid = false;
         return false;
     }
 }

@@ -115,21 +115,15 @@ void RTLInstDict::print(OStream &os /*= std::cout*/)
 }
 
 
-std::pair<QString, unsigned> RTLInstDict::getSignature(const QString &instructionName) const
+std::pair<QString, int> RTLInstDict::getSignature(const QString &instructionName) const
 {
     // Take the argument, convert it to upper case and remove any .'s
     const QString sanitizedName = QString(instructionName).remove(".").toUpper();
 
     // Look up the dictionary
-    auto it = m_instructions.find(sanitizedName);
+    const auto it = m_instructions.find(sanitizedName);
     if (it == m_instructions.end()) {
-        LOG_ERROR("No entry for '%1' in RTL dictionary", sanitizedName);
-        it = m_instructions.find("NOP");
-
-        if (it == m_instructions.end()) {
-            LOG_ERROR("No entry for 'NOP' in RTL dictionary");
-            return { sanitizedName, 0 }; // At least, don't cause segfault
-        }
+        return { sanitizedName, -1 }; // At least, don't cause segfault
     }
 
     return { sanitizedName, (it->second).m_params.size() };

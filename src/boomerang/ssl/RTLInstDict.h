@@ -61,7 +61,7 @@ public:
 
     /// \returns the name and the number of operands of the instruction
     /// with name \p instructionName
-    std::pair<QString, DWord> getSignature(const QString &instructionName) const;
+    std::pair<QString, int> getSignature(const QString &instructionName) const;
 
     /**
      * Returns a new RTL containing the semantics of the instruction with name \p name.
