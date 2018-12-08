@@ -66,11 +66,6 @@ bool ExeBinaryLoader::loadFromMemory(QByteArray &data)
             return false;
         }
 
-        /* This is a typical DOS kludge! */
-        if (Util::readWord(&m_header->relocTabOffset, Endian::Little) == 0x40) {
-            LOG_ERROR("File is NE format executable");
-            return false;
-        }
 
         /* Calculate the load module size.
          * This is the number of pages in the file
@@ -260,12 +255,33 @@ int ExeBinaryLoader::canLoad(QIODevice &fl) const
     Byte buf[4];
     fl.read(reinterpret_cast<char *>(buf), sizeof(buf));
 
-    if (Util::testMagic(buf, { 'M', 'Z' })) {
-        /* DOS-based file */
-        return 2;
+    if (!Util::testMagic(buf, { 'M', 'Z' })) {
+        /* No MZ header */
+        return 0;
     }
 
-    return 0;
+    /* Check if this is a  Windows NE executable
+     * It will have a DOS MZ header, but also another header later on
+     * Offset of the NE header is at 0x3C
+     * The NE header will start with the signature 'NE'
+     * Ref: https://www.fileformat.info/format/exe/corion-mz.htm
+     */
+    if (fl.seek(0x3C)) {
+        if (fl.read(reinterpret_cast<char *>(buf), 2) == 2) {
+            const SWord possibleWinHeaderOffset = Util::readWord(buf, Endian::Little);
+            if (fl.seek(possibleWinHeaderOffset)) {
+                if (fl.read(reinterpret_cast<char *>(buf), 2) == 2) {
+                    if (Util::testMagic(buf, { 'N', 'E' })) {
+                        /* This is a Windows NE Executable */
+                        return 0;
+                    }
+                }
+            }
+        }
+    }
+
+    /* DOS-based file */
+    return 2;
 }
 
 
