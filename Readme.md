@@ -20,7 +20,7 @@ it is currently recommended to build the development version (`develop`) of the 
  - [CMake 3.8.0 or newer](https://cmake.org/download/)
  - [Qt5](https://www.qt.io/download-open-source/) (Qt 5.11+ is known to work, earlier versions should also work)
  - [Capstone 3.0.5 or newer](http://www.capstone-engine.org/)
- - [GNU bison 3.0 or newer](https://www.gnu.org/software/bison/)
+ - [GNU bison 3.0 or newer](https://www.gnu.org/software/bison/) (3.0.5+ is recommended)
  - [GNU flex 2.6 or newer](https://github.com/westes/flex)
  - [Doxygen 1.8.13 or newer](http://www.doxygen.nl/) (optional, for documentation)
  - [Python 3](https://www.python.org/downloads/) (optional, for regression tests)
