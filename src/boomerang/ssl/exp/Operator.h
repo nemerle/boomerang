@@ -154,10 +154,7 @@ enum OPER
     opOF,  ///< overflow flag
     opDF,  ///< Pentium Direction (=Down) flag
     opFZF, ///< floating point zero flag
-    opFLF, ///< floating point less flag
-
-    // ALWAYS LAST!
-    opNumOf ///< Special index: MUST BE LAST!
+    opFLF  ///< floating point less flag
 };
 
 /// Convert operator to string

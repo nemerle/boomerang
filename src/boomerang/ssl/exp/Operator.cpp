@@ -123,7 +123,6 @@ const char *operToString(OPER oper)
         HANDLE_OPER(opFLF);
 
     case opInvalid: break;
-    case opNumOf: break;
     }
 
     assert(!"operToString: Invalid operator.");
