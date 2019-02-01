@@ -704,12 +704,48 @@ void ExpSimplifierTest::testSimplify_data()
                                    Location::regOf(REG_PENT_EAX)),
                       Location::regOf(REG_PENT_EAX));
 
-        TEST_SIMPLIFY("SgnExConst",
+
+        TEST_SIMPLIFY("SgnExConst8To32",
                       Ternary::get(opSgnEx,
                                    Const::get(8),
                                    Const::get(32),
                                    Const::get(-10)),
                       Const::get(-10));
+
+        TEST_SIMPLIFY("SgnExConst8To32_16",
+                      Ternary::get(opSgnEx,
+                                   Const::get(8),
+                                   Const::get(32),
+                                   Const::get(0xFF7F)),
+                      Const::get(0x7F));
+
+        TEST_SIMPLIFY("SgnExConst16To32Pos",
+                      Ternary::get(opSgnEx,
+                                   Const::get(16),
+                                   Const::get(32),
+                                   Const::get(10)),
+                      Const::get(10));
+
+        TEST_SIMPLIFY("SgnExConst16To32Neg",
+                      Ternary::get(opSgnEx,
+                                   Const::get(16),
+                                   Const::get(32),
+                                   Const::get(0xFFFE)),
+                      Const::get(-2));
+
+        TEST_SIMPLIFY("SgnExConst32To16Neg",
+                      Ternary::get(opSgnEx,
+                                   Const::get(32),
+                                   Const::get(16),
+                                   Const::get(-1)),
+                      Const::get(-1));
+
+        TEST_SIMPLIFY("SgnExConst32To64Neg",
+                      Ternary::get(opSgnEx,
+                                   Const::get(32),
+                                   Const::get(64),
+                                   Const::get(-1)),
+                      Const::get((uint64_t)-1));
 
 
         /// TODO What about zfill(8, 32, -10) ?

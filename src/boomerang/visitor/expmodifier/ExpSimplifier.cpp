@@ -673,8 +673,39 @@ SharedExp ExpSimplifier::postModify(const std::shared_ptr<Ternary> &exp)
     }
 
     /// sign-extend constant value
-    if ((exp->getOper() == opSgnEx || exp->getOper() == opZfill) &&
-        exp->getSubExp3()->isIntConst()) {
+    if (exp->getOper() == opSgnEx && exp->getSubExp1()->isIntConst() &&
+        exp->getSubExp2()->isIntConst() && exp->getSubExp3()->isIntConst()) {
+        const int from   = exp->access<Const, 1>()->getInt();
+        const int to     = exp->access<Const, 2>()->getInt();
+        const int oldVal = exp->access<Const, 3>()->getInt();
+        if (to <= from) {
+            changed = true;
+            return exp->getSubExp3();
+        }
+        else if (from == 0) {
+            changed = true;
+            return Const::get(0);
+        }
+
+        const bool sign = ((oldVal >> (from - 1)) & 1) == 1;
+        if (sign) {
+            changed = true;
+            if (to > 32) {
+                return Const::get((Util::getLowerBitMask(to - from) << from) |
+                                  (oldVal & Util::getLowerBitMask(from)));
+            }
+            else {
+                return Const::get((int)(Util::getLowerBitMask(to - from) << from) |
+                                  (int)(oldVal & Util::getLowerBitMask(from)));
+            }
+        }
+        else {
+            changed = true;
+            return Const::get((int)(oldVal & Util::getLowerBitMask(from)));
+        }
+    }
+
+    if (exp->getOper() == opZfill && exp->getSubExp3()->isIntConst()) {
         changed = true;
         return exp->getSubExp3();
     }
