@@ -24,11 +24,12 @@ class Function;
 class BOOMERANG_API Const : public Exp
 {
 private:
-    typedef std::variant<int,        ///< Integer
-                         QWord,      ///< 64 bit integer / address / pointer
-                         double,     ///< Double precision float
-                         Function *, ///< Pointer to function (e.g. global function pointers)
-                         QString     ///< The string value of this constant
+    typedef std::variant<int,         ///< Integer
+                         QWord,       ///< 64 bit integer / address / pointer
+                         double,      ///< Double precision float
+                         Function *,  ///< Pointer to function (e.g. global function pointers)
+                         QString,     ///< The string value of this constant (for identifiers etc.)
+                         const char * ///< The raw string value of this constant
                          >
         Data;
 
@@ -42,6 +43,7 @@ public:
     Const(Address a);
     Const(double d);
     Const(const QString &p);
+    Const(const char *rawString);
     Const(Function *p);
 
     Const(const Const &other);
@@ -85,6 +87,7 @@ public:
     QWord getLong() const;
     double getFlt() const;
     QString getStr() const;
+    const char *getRawStr() const;
     Address getAddr() const;
     QString getFuncName() const;
 
@@ -93,6 +96,7 @@ public:
     void setLong(QWord ll);
     void setFlt(double d);
     void setStr(const QString &p);
+    void setRawStr(const char *p);
     void setAddr(Address a);
 
     /// \returns the type of the constant

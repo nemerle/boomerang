@@ -31,7 +31,7 @@ namespace Util
  * Turns things like newline, return, tab into \n, \r, \t etc
  * \note Assumes a C or C++ back end
  */
-QString BOOMERANG_API escapeStr(const QString &str);
+QString BOOMERANG_API escapeStr(const char *str);
 
 OStream &alignStream(OStream &str, int align);
 

@@ -1086,7 +1086,7 @@ void CCodeGenerator::appendExp(OStream &str, const Exp &exp, OpPrec curPrec, boo
 
     case opStrConst:
         // escape string:
-        str << "\"" << Util::escapeStr(constExp.getStr()) << "\"";
+        str << "\"" << Util::escapeStr(constExp.getRawStr()) << "\"";
         break;
 
     case opFuncConst: str << constExp.getFuncName(); break;
@@ -1095,13 +1095,10 @@ void CCodeGenerator::appendExp(OStream &str, const Exp &exp, OpPrec curPrec, boo
         SharedConstExp sub = unaryExp.getSubExp1();
 
         if (sub->isGlobal()) {
-            Prog *prog = m_proc->getProg();
+            Prog *prog    = m_proc->getProg();
+            SharedType gt = prog->getGlobalType(sub->access<const Const, 1>()->getStr());
 
-            auto con      = sub->access<const Const, 1>();
-            SharedType gt = prog->getGlobalType(con->getStr());
-
-            if (gt && (gt->isArray() ||
-                       (gt->isPointer() && gt->as<PointerType>()->getPointsTo()->isChar()))) {
+            if (gt && (gt->resolvesToArray() || gt->isCString())) {
                 // Special C requirement: don't emit "&" for address of an array or char*
                 appendExp(str, *sub, curPrec);
                 break;

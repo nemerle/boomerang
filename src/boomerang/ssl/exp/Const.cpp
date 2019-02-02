@@ -61,6 +61,14 @@ Const::Const(const QString &p)
 }
 
 
+Const::Const(const char *rawString)
+    : Exp(opStrConst)
+    , m_type(VoidType::get())
+{
+    m_value = rawString;
+}
+
+
 Const::Const(Function *p)
     : Exp(opFuncConst)
     , m_type(VoidType::get())
@@ -146,7 +154,23 @@ double Const::getFlt() const
 
 QString Const::getStr() const
 {
-    return std::get<QString>(m_value);
+    if (std::get_if<QString>(&m_value) != nullptr) {
+        return std::get<QString>(m_value);
+    }
+    else {
+        return std::get<const char *>(m_value);
+    }
+}
+
+
+const char *Const::getRawStr() const
+{
+    if (std::get_if<const char *>(&m_value) != nullptr) {
+        return std::get<const char *>(m_value);
+    }
+    else {
+        return qPrintable(std::get<QString>(m_value));
+    }
 }
 
 
@@ -188,6 +212,12 @@ void Const::setFlt(double value)
 void Const::setStr(const QString &value)
 {
     m_value = value;
+}
+
+
+void Const::setRawStr(const char *p)
+{
+    m_value = p;
 }
 
 

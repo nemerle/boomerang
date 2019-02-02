@@ -23,10 +23,10 @@
 
 namespace Util
 {
-QString escapeStr(const QString &inp)
+QString escapeStr(const char *inp)
 {
     // clang-format off
-    static const QMap<QChar, QString> replacements{
+    static const std::map<char, QString> replacements{
         { '\n', "\\n" },
         { '\t', "\\t" },
         { '\v', "\\v" },
@@ -40,18 +40,19 @@ QString escapeStr(const QString &inp)
 
     QString result;
 
-    for (QChar c : inp) {
-        if (isprint(c.cell()) && c != QChar('\"')) {
-            result += QChar(c);
+    for (char c : std::string(inp)) {
+        if (isprint(c) && c != '\"') {
+            result += c;
             continue;
         }
 
-        if (replacements.contains(c)) {
-            result += replacements[c];
+        auto it = replacements.find(c);
+        if (it != replacements.end()) {
+            result += it->second;
         }
         else {
-            result += QChar('\\');
-            result += QString::number(c.cell(), 8);
+            result += '\\';
+            result += QString::number(c & 0xFF, 8);
         }
     }
 

@@ -331,8 +331,8 @@ void DFATypeRecovery::dfaTypeAnalysis(UserProc *proc)
 
                     if (str) {
                         // Make a string
-                        con->setStr(str);
                         con->setOper(opStrConst);
+                        con->setRawStr(str);
                     }
                 }
                 else if (baseType->resolvesToInteger() || baseType->resolvesToFloat() ||
