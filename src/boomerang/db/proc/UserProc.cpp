@@ -1058,10 +1058,14 @@ QString UserProc::getRegName(SharedExp r)
 
     // assert(r->getSubExp1()->isConst());
     if (r->getSubExp1()->isConst()) {
-        RegNum regNum = r->access<Const, 1>()->getInt();
-        const QString &regName(m_prog->getRegNameByNum(regNum));
-        assert(!regName.isEmpty());
+        const RegNum regNum = r->access<Const, 1>()->getInt();
 
+        if (regNum == (RegNum)-1) {
+            LOG_WARN("Tried to get name of special register!");
+            return "r[-1]";
+        }
+
+        QString regName = m_prog->getRegNameByNum(regNum);
         if (regName[0] == '%') {
             return regName.mid(1); // Skip % if %eax
         }

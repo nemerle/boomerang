@@ -33,6 +33,7 @@
 #include "boomerang/ssl/type/FuncType.h"
 #include "boomerang/ssl/type/IntegerType.h"
 #include "boomerang/ssl/type/PointerType.h"
+#include "boomerang/util/ByteUtil.h"
 #include "boomerang/util/log/Log.h"
 
 
@@ -1270,18 +1271,30 @@ void CCodeGenerator::appendExp(OStream &str, const Exp &exp, OpPrec curPrec, boo
         appendExp(str, *ternaryExp.getSubExp1(), OpPrec::BitShift);
         auto first = ternaryExp.access<const Const, 2>();
         auto last  = ternaryExp.access<const Const, 3>();
+
         str << " >> ";
         appendExp(str, *last, OpPrec::BitShift);
         str << " & ";
 
-        const unsigned int mask = (1 << (first->getInt() - last->getInt() + 1)) - 1;
+        SharedExp maskExp = Binary::get(opPlus, Binary::get(opMinus, first->clone(), last->clone()),
+                                        Const::get(1))
+                                ->simplify();
 
-        // print 0x3 as 3
-        if (mask < 10) {
-            str << mask;
+        if (maskExp->isIntConst()) {
+            const unsigned int mask = Util::getLowerBitMask(maskExp->access<Const>()->getInt());
+
+            // print 0x3 as 3
+            if (mask < 10) {
+                str << mask;
+            }
+            else {
+                str << "0x" << QString::number(mask, 16);
+            }
         }
         else {
-            str << "0x" << QString::number(mask, 16);
+            maskExp = Binary::get(opMinus, Binary::get(opShL, Const::get(1), maskExp),
+                                  Const::get(1));
+            appendExp(str, *maskExp, OpPrec::BitAnd);
         }
 
         closeParen(str, curPrec, OpPrec::BitAnd);
