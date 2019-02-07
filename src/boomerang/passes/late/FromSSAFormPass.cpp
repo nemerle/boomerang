@@ -15,6 +15,7 @@
 #include "boomerang/db/proc/UserProc.h"
 #include "boomerang/decomp/InterferenceFinder.h"
 #include "boomerang/passes/PassManager.h"
+#include "boomerang/ssl/RTL.h"
 #include "boomerang/ssl/exp/Location.h"
 #include "boomerang/ssl/exp/RefExp.h"
 #include "boomerang/ssl/statements/PhiAssign.h"
@@ -334,6 +335,22 @@ bool FromSSAFormPass::execute(UserProc *proc)
 
             // Replace the RHS of the phi with tempLoc
             phi->convertToAssign(tempLoc);
+        }
+    }
+
+    // Also remove implicit assignments, since they are useless now.
+    for (BasicBlock *bb : *proc->getCFG()) {
+        for (auto &rtl : *bb->getRTLs()) {
+            auto it = rtl->begin();
+            while (it != rtl->end()) {
+                if ((*it)->isImplicit()) {
+                    delete *it;
+                    it = rtl->erase(it);
+                }
+                else {
+                    ++it;
+                }
+            }
         }
     }
 
