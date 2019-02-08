@@ -233,7 +233,9 @@ void ExpPrinter::printPlain(OStream &os, const SharedConstExp &exp) const
 
     case opTypedExp: {
         SharedConstType ty = exp->access<const TypedExp>()->getType();
-        os << "<" << ty->getSize() << ">";
+        os << "(" << *ty << ")(";
+        print(os, exp->getSubExp1());
+        os << ")";
         return;
     }
 
