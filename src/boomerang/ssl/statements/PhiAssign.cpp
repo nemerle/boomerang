@@ -47,9 +47,8 @@ Statement *PhiAssign::clone() const
         const RefExp &pi = val.second;
         assert(pi.getSubExp1());
 
-        RefExp clone(pi.getSubExp1()->clone(), // Do clone the expression pointer
-                     pi.getDef());             // Don't clone the Statement pointer (never moves)
-
+        // Clone the expression pointer, but not the statement pointer (never moves)
+        RefExp clone(pi.getSubExp1()->clone(), pi.getDef());
         pa->m_defs.insert({ bb, RefExp(pi.getSubExp1()->clone(), pi.getDef()) });
     }
 

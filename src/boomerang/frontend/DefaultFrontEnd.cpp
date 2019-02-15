@@ -398,12 +398,12 @@ bool DefaultFrontEnd::processProc(UserProc *proc, Address addr)
 
                     if (jumpDest == nullptr) { // Happens if already analysed (now redecoding)
                         BB_rtls->push_back(std::move(inst.rtl));
-                        currentBB = cfg->createBB(
-                            BBType::Nway,
-                            std::move(BB_rtls)); // processSwitch will update num outedges
-                        BB_rtls = nullptr;       // New RTLList for next BB
-                        IndirectJumpAnalyzer().processSwitch(
-                            currentBB, proc);     // decode arms, set out edges, etc
+
+                        // processSwitch will update num outedges
+                        currentBB = cfg->createBB(BBType::Nway, std::move(BB_rtls));
+
+                        // decode arms, set out edges, etc
+                        IndirectJumpAnalyzer().processSwitch(currentBB, proc);
                         sequentialDecode = false; // Don't decode after the jump
                         break;                    // Just leave it alone
                     }
@@ -468,9 +468,6 @@ bool DefaultFrontEnd::processProc(UserProc *proc, Address addr)
                     BB_rtls->push_back(std::move(inst.rtl));
 
                     currentBB = cfg->createBB(BBType::Twoway, std::move(BB_rtls));
-                    // Create the list of RTLs for the next basic block and continue with the next
-                    // instruction.
-                    BB_rtls = nullptr;
 
                     // Stop decoding sequentially if the basic block already existed otherwise
                     // complete the basic block
@@ -506,6 +503,7 @@ bool DefaultFrontEnd::processProc(UserProc *proc, Address addr)
                                            ->getSymbols()
                                            ->findSymbolByAddress(linkedAddr)
                                            ->getName();
+
                         Function *function = proc->getProg()->getOrCreateLibraryProc(name);
                         call->setDestProc(function);
                         call->setIsComputed(false);
@@ -558,8 +556,8 @@ bool DefaultFrontEnd::processProc(UserProc *proc, Address addr)
                         // be able to analyse it's callee(s), of course.
                         callList.push_back(call);
                     }
-                    else { // Static call
-                           // Find the address of the callee.
+                    else {
+                        // Static call
                         Address callAddr = call->getFixedDest();
 
                         // Calls with 0 offset (i.e. call the next instruction) are simply
@@ -704,7 +702,6 @@ bool DefaultFrontEnd::processProc(UserProc *proc, Address addr)
                 // Create the fallthrough BB, if there are any RTLs at all
                 if (BB_rtls) {
                     BasicBlock *bb = cfg->createBB(BBType::Fall, std::move(BB_rtls));
-                    BB_rtls        = nullptr; // Need new list of RTLs
 
                     // Add an out edge to this address
                     if (bb) {

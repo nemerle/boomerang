@@ -307,9 +307,10 @@ bool DataFlow::placePhiFunctions()
             LocationSet locationSet;
             stmt->getDefinitions(locationSet, assumeABICompliance);
 
-            if (stmt->isCall() && static_cast<const CallStatement *>(stmt)
-                                      ->isChildless()) { // If this is a childless call
-                m_defallsites.insert(n);                 // then this block defines every variable
+            // If this is a childless call
+            if (stmt->isCall() && static_cast<const CallStatement *>(stmt)->isChildless()) {
+                // then this block defines every variable
+                m_defallsites.insert(n);
             }
 
             for (const SharedExp &exp : locationSet) {

@@ -1859,8 +1859,9 @@ void CCodeGenerator::appendTypeIdent(OStream &str, SharedConstType typ, QString 
 
         str << "]";
     }
-    else if (typ->isVoid()) { // Can happen in e.g. twoproc, where really need global parameter and
-                              // return analysis
+    // Can happen in e.g. twoproc, where really need global parameter and
+    // return analysis
+    else if (typ->isVoid()) {
         // TMN: Stop crashes by this workaround
         if (ident.isEmpty()) {
             ident = "unknownVoidType";
@@ -2242,11 +2243,11 @@ void CCodeGenerator::generateCode_Branch(const BasicBlock *bb,
             Const caseVal(0);
 
             if (psi->switchType == SwitchType::F) { // "Fortran" style?
-                caseVal.setInt(reinterpret_cast<int *>(
-                    psi->tableAddr.value())[i]); // Yes, use the table value itself
+                // Yes, use the table value itself
+                caseVal.setInt(reinterpret_cast<int *>(psi->tableAddr.value())[i]);
             }
-            // Note that uTable has the address of an int array
             else {
+                // Note that uTable has the address of an int array
                 caseVal.setInt(static_cast<int>(psi->lowerBound + i));
             }
 

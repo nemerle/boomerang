@@ -414,9 +414,9 @@ void DFATypeRecovery::dfaTypeAnalysis(UserProc *proc)
                             Binary::get(opArrayIndex,
                                         Location::global(_prog->getGlobalNameByAddr(K), proc),
                                         idx));
-                        // Beware of changing expressions in implicit assignments... map can become
-                        // invalid
-                        bool isImplicit = s->isImplicit();
+                        // Beware of changing expressions in implicit assignments...
+                        // map can become invalid
+                        const bool isImplicit = s->isImplicit();
 
                         if (isImplicit) {
                             cfg->removeImplicitAssign(static_cast<ImplicitAssign *>(s)->getLeft());
@@ -446,8 +446,7 @@ void DFATypeRecovery::dfaTypeAnalysis(UserProc *proc)
                     // Reinterpret as a float (and convert to double)
                     // con->setFlt(reinterpret_cast<float>(con->getInt()));
                     int tmp = con->getInt();
-                    con->setFlt(*reinterpret_cast<float *>(
-                        &tmp)); // Reinterpret to float, then cast to double
+                    con->setFlt(*reinterpret_cast<float *>(&tmp));
                     con->setOper(opFltConst);
                     con->setType(FloatType::get(64)); // TODO: why double ? float might do
                 }

@@ -107,8 +107,9 @@ MainWindow::MainWindow(QWidget *_parent)
 
     if (ui->cbInputFile->count() > 0) {
         int currentIdx = ui->cbInputFile->findText(settings.value("inputfile").toString());
-        currentIdx     = std::max(currentIdx,
-                              0); // if selected input file could not be found, use last one
+
+        // if selected input file could not be found, use last one
+        currentIdx = std::max(currentIdx, 0);
         ui->cbInputFile->setCurrentIndex(currentIdx);
     }
 

@@ -133,8 +133,8 @@ bool BlockVarRenamePass::renameBlockVars(
 
 
                 if (def && def->isCall()) {
-                    // Calls have UseCollectors for locations that are used before definition at the
-                    // call
+                    // Calls have UseCollectors for locations that are used before definition
+                    // at the call
                     static_cast<CallStatement *>(def)->useBeforeDefine(location->clone());
                 }
 

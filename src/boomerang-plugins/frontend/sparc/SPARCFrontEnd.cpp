@@ -219,12 +219,10 @@ bool SPARCFrontEnd::case_CALL(Address &address, DecodeResult &inst, DecodeResult
             // struct, 12 bytes ahead. But the problem is: how do you know this function returns a
             // struct at decode time? If forceOutEdge is set, set offset to 0 and no out-edge will
             // be added yet
-            int offset = !inst.forceOutEdge.isZero() ? 0 :
-                                                     // (call_stmt->returnsStruct() ? 12 : 8);
-                                                     // MVE: FIXME!
-                             8;
+            // MVE: FIXME!
+            int offset = !inst.forceOutEdge.isZero() ? 0 : /*call_stmt->returnsStruct()?12:8*/ 8;
+            bool ret   = true;
 
-            bool ret = true;
             // Check for _exit; probably should check for other "never return" functions
             QString name = m_program->getSymbolNameByAddr(dest);
 

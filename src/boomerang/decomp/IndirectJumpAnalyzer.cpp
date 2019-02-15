@@ -559,9 +559,8 @@ bool IndirectJumpAnalyzer::analyzeCompJump(BasicBlock *bb, UserProc *proc)
                     SwitchInfo *swi = new SwitchInfo;
                     swi->switchType = SwitchType::F; // The "Fortran" form
                     swi->switchExp  = jumpDest;
-                    swi->tableAddr  = Address(
-                        HostAddress(destArray).value()); // WARN: HACK HACK HACK Abuse the
-                    // tableAddr member as a pointer
+                    // WARN: HACK HACK HACK Abuse the tableAddr member as a pointer
+                    swi->tableAddr       = Address(HostAddress(destArray).value());
                     swi->lowerBound      = 1; // Not used, except to compute
                     swi->upperBound      = static_cast<int>(num_dests); // the number of options
                     swi->numTableEntries = static_cast<int>(num_dests);

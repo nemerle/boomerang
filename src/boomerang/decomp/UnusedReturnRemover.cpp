@@ -249,8 +249,7 @@ void UnusedReturnRemover::updateForUseChange(UserProc *proc)
     }
 
     // Have to redo dataflow to get the liveness at the calls correct
-    PassManager::get()->executePass(PassID::CallLivenessRemoval,
-                                    proc); // Want to recompute the call livenesses
+    PassManager::get()->executePass(PassID::CallLivenessRemoval, proc);
     PassManager::get()->executePass(PassID::BlockVarRename, proc);
 
     // Perform type analysis. If we are relying (as we are at present) on TA to perform ellipsis

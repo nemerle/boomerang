@@ -149,9 +149,9 @@ bool UnusedParamRemovalPass::checkForGainfulUse(UserProc *proc, SharedExp bparam
             }
         }
         else if (s->isReturn()) {
-            if (proc->getRecursionGroup() &&
-                !proc->getRecursionGroup()->empty()) { // If this function is involved in recursion
-                continue;                              //  then ignore this return statement
+            if (proc->getRecursionGroup() && !proc->getRecursionGroup()->empty()) {
+                // If this functions is involved in recursion, then ignore this return statement
+                continue;
             }
         }
         else if (s->isPhi() && (proc->getRetStmt() != nullptr) && proc->getRecursionGroup() &&

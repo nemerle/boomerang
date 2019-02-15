@@ -1153,9 +1153,8 @@ bool CallStatement::ellipsisProcessing(Prog *prog)
         case 'E': // Various floating point formats
             // Note that for scanf, %f means float, and %lf means double, whereas for printf, both
             // of these mean double
-            addSigParam(FloatType::get(veryLong ? 128 : (isScanf ? 32 : 64)),
-                        isScanf); // Note: may not be 64 bits
-            // for some archs
+            // Note: may not be 64 bits for some archs
+            addSigParam(FloatType::get(veryLong ? 128 : (isScanf ? 32 : 64)), isScanf);
             break;
 
         case 's': // String

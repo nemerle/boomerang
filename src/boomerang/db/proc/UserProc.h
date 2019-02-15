@@ -380,13 +380,12 @@ private:
     bool isNoReturnInternal(std::set<const Function *> &visited) const;
 
 private:
-    /**
-     * The status of this user procedure.
-     * Status: undecoded .. final decompiled
-     */
+    /// The status of this user procedure.
+    /// Status: undecoded .. final decompiled
     ProcStatus m_status = ProcStatus::Undecoded;
-    int m_nextLocal     = 0; ///< Number of the next local. Can't use locals.size() because some get
-                             ///< deleted
+
+    /// Number of the next local. Can't use locals.size() because some get deleted
+    int m_nextLocal = 0;
 
     std::unique_ptr<ProcCFG> m_cfg; ///< The control flow graph.
 

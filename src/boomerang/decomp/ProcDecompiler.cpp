@@ -578,10 +578,10 @@ void ProcDecompiler::middleDecompile(UserProc *proc)
 
         // Now that locals are identified, redo the dataflow
         PassManager::get()->executePass(PassID::PhiPlacement, proc);
+        PassManager::get()->executePass(PassID::BlockVarRename, proc);
 
-        PassManager::get()->executePass(PassID::BlockVarRename, proc); // Rename the locals
-        PassManager::get()->executePass(PassID::StatementPropagation,
-                                        proc); // Surely need propagation too
+        // Surely need propagation too
+        PassManager::get()->executePass(PassID::StatementPropagation, proc);
 
         if (project->getSettings()->verboseOutput) {
             proc->debugPrintAll("after propagating locals");

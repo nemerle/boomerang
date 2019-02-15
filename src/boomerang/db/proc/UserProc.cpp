@@ -1331,8 +1331,8 @@ bool UserProc::prover(SharedExp query, std::set<PhiAssign *> &lastPhis,
                     } // End call involved in this recursion group
 
                     // Seems reasonable that recursive procs need protection from call loops too
-                    auto right = call->getProven(
-                        r->getSubExp1()); // getProven returns the right side of what is
+                    // getProven returns the right side of what is
+                    auto right = call->getProven(r->getSubExp1());
 
                     if (right) { //    proven about r (the LHS of query)
                         right = right->clone();

@@ -104,8 +104,7 @@ struct BBStructInfo
 
     /* high level structuring */
     SBBType m_loopCondType = SBBType::None; ///< type of conditional to treat this loop header as
-                                            ///< (if any)
-    SBBType m_structType = SBBType::None;   ///< structured type of this node
+    SBBType m_structType   = SBBType::None; ///< structured type of this node
 
     /// the structuring class (Loop, Cond, etc)
     StructType m_structuringType = StructType::Seq;
