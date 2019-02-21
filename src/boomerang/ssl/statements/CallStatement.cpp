@@ -1165,6 +1165,10 @@ bool CallStatement::ellipsisProcessing(Prog *prog)
             addSigParam(CharType::get(), isScanf);
             break;
 
+        case 'p': // Pointer
+            addSigParam(PointerType::get(VoidType::get()), isScanf);
+            break;
+
         case '%': break; // Ignore %% (emits 1 percent char)
 
         default: LOG_WARN("Unhandled format character %1 in format string for call %2", ch, this);
