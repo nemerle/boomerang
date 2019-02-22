@@ -132,6 +132,13 @@ SharedExp operandToExp(const cs::cs_x86_op &operand)
 CapstoneX86Decoder::CapstoneX86Decoder(Project *project)
     : CapstoneDecoder(project, cs::CS_ARCH_X86, cs::CS_MODE_32, "ssl/x86.ssl")
 {
+    m_insn = cs::cs_malloc(m_handle);
+}
+
+
+CapstoneX86Decoder::~CapstoneX86Decoder()
+{
+    cs::cs_free(m_insn, 1);
 }
 
 
@@ -156,31 +163,26 @@ bool CapstoneX86Decoder::initialize(Project *project)
 bool CapstoneX86Decoder::decodeInstruction(Address pc, ptrdiff_t delta, DecodeResult &result)
 {
     const Byte *instructionData = reinterpret_cast<const Byte *>((HostAddress(delta) + pc).value());
+    size_t size                 = X86_MAX_INSTRUCTION_LENGTH;
+    uint64 addr                 = pc.value();
 
-    cs::cs_insn *decodedInstruction;
-    size_t numInstructions = cs_disasm(m_handle, instructionData, X86_MAX_INSTRUCTION_LENGTH,
-                                       pc.value(), 1, &decodedInstruction);
+    result.valid = cs_disasm_iter(m_handle, &instructionData, &size, &addr, m_insn);
 
-    result.valid = numInstructions > 0;
     if (!result.valid) {
         return false;
     }
-    else if (decodedInstruction->id == cs::X86_INS_BSF ||
-             decodedInstruction->id == cs::X86_INS_BSR) {
+    else if (m_insn->id == cs::X86_INS_BSF || m_insn->id == cs::X86_INS_BSR) {
         // special hack to give BSF/BSR the correct semantics since SSL does not support loops yet
-        const bool ok = genBSFR(pc, decodedInstruction, result);
-        cs_free(decodedInstruction, numInstructions);
+        const bool ok = genBSFR(pc, m_insn, result);
         return ok;
     }
 
     result.type         = ICLASS::NOP; // ICLASS is irrelevant for x86
-    result.numBytes     = decodedInstruction->size;
+    result.numBytes     = m_insn->size;
     result.reDecode     = false;
-    result.rtl          = createRTLForInstruction(pc, decodedInstruction);
+    result.rtl          = createRTLForInstruction(pc, m_insn);
     result.forceOutEdge = Address::ZERO;
     result.valid        = (result.rtl != nullptr);
-
-    cs_free(decodedInstruction, numInstructions);
     return true;
 }
 

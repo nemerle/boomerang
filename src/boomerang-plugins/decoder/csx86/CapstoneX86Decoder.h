@@ -24,6 +24,7 @@ class BOOMERANG_PLUGIN_API CapstoneX86Decoder : public CapstoneDecoder
 {
 public:
     CapstoneX86Decoder(Project *project);
+    ~CapstoneX86Decoder();
 
 public:
     /// \copydoc IDecoder::decodeInstruction
@@ -75,4 +76,5 @@ private:
 
 private:
     int m_bsfrState = 0; ///< State for state machine used in genBSFR()
+    cs::cs_insn *m_insn; ///< decoded instruction;
 };
