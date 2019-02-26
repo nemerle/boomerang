@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
         local0 = 0;
     }
     local1 = (char) (local0);
-    printf("Result is %d\n", ROTL((local1)) & 0xff);
-    return ROTL((local1)) & 0xff;
+    printf("Result is %d\n", ROTL((local1), 0) & 0xff);
+    return ROTL((local1), 0) & 0xff;
 }
 

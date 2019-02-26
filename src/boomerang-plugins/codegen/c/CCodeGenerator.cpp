@@ -1468,25 +1468,33 @@ void CCodeGenerator::appendExp(OStream &str, const Exp &exp, OpPrec curPrec, boo
 
     case opRotL:
         str << "ROTL(";
-        appendExp(str, *unaryExp.getSubExp1(), OpPrec::Unary);
+        appendExp(str, *binaryExp.getSubExp1(), OpPrec::Unary);
+        str << ", ";
+        appendExp(str, *binaryExp.getSubExp2(), OpPrec::Unary);
         str << ")";
         break;
 
     case opRotR:
         str << "ROTR(";
-        appendExp(str, *unaryExp.getSubExp1(), OpPrec::Unary);
+        appendExp(str, *binaryExp.getSubExp1(), OpPrec::Unary);
+        str << ", ";
+        appendExp(str, *binaryExp.getSubExp2(), OpPrec::Unary);
         str << ")";
         break;
 
     case opRotLC:
         str << "ROTLC(";
-        appendExp(str, *unaryExp.getSubExp1(), OpPrec::Unary);
+        appendExp(str, *binaryExp.getSubExp1(), OpPrec::Unary);
+        str << ", ";
+        appendExp(str, *binaryExp.getSubExp2(), OpPrec::Unary);
         str << ")";
         break;
 
     case opRotRC:
         str << "ROTRC(";
-        appendExp(str, *unaryExp.getSubExp1(), OpPrec::Unary);
+        appendExp(str, *binaryExp.getSubExp1(), OpPrec::Unary);
+        str << ", ";
+        appendExp(str, *binaryExp.getSubExp2(), OpPrec::Unary);
         str << ")";
         break;
 

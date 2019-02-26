@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
         g3 = strlen(g5);
         g31 = g3;
         g30 = g3;
-        printf("%d", ROTL(g3) & ~0x1);
+        printf("%d", ROTL(g3, 1) & ~0x1);
     }
     else {
         g3_1 = strlen(g5);

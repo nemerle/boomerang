@@ -41,7 +41,7 @@ bb0x10000500:
             while (local2 < local6) {
                 g9 = *local5;
                 g0 = *(unsigned char*)(g9 + local2);
-                g0 = (ROTL(g0) & 0xff) - 32;
+                g0 = (ROTL(g0, 0) & 0xff) - 32;
                 local0 = g0;
                 if (g0 < 0) {
                     local0 = 0;
@@ -49,21 +49,21 @@ bb0x10000500:
                 local1 = 0;
 bb0x10000564:
                 if (local1 <= 6) {
-                    g10 = (ROTL(local2) & ~0x7) + g1 + local1 - 96;
-                    g11 = (ROTL((((local0 >> 3) + XERCA) * 7 + local7)) & ~0x3) + 0x100120f4;
+                    g10 = (ROTL(local2, 3) & ~0x7) + g1 + local1 - 96;
+                    g11 = (ROTL((((local0 >> 3) + XERCA) * 7 + local7), 2) & ~0x3) + 0x100120f4;
                     g0 = *g11;
-                    g0 = *(unsigned char*)((local0 - (ROTL(((local0 >> 3) + XERCA)) & ~0x7)) * 7 + local1 + g0);
+                    g0 = *(unsigned char*)((local0 - (ROTL(((local0 >> 3) + XERCA), 3) & ~0x7)) * 7 + local1 + g0);
                     *(__size8*)g10 = (char) g0;
                     local1++;
                     goto bb0x10000564;
                 }
-                *(__size8*)((ROTL(local2) & ~0x7) + g1 - 89) = 32;
+                *(__size8*)((ROTL(local2, 3) & ~0x7) + g1 - 89) = 32;
                 local2++;
             }
-            local2 = (ROTL(local6) & ~0x7) - 1;
+            local2 = (ROTL(local6, 3) & ~0x7) - 1;
             while (local2 >= 0) {
                 g0 = *(unsigned char*)(g1 + local2 - 96);
-                if ((ROTL(g0) & 0xff) == 32) {
+                if ((ROTL(g0, 0) & 0xff) == 32) {
                     *(__size8*)(g1 + local2 - 96) = 0;
                     local2--;
                 }

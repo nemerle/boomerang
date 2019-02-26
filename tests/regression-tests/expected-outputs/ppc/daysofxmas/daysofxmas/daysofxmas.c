@@ -23,12 +23,12 @@ int main(union { int; char *[] *; } argc, union { int; char *[] *; } argv)
         if (argc >= 0) {
             if (argc <= 0) {
                 g0_1 = *(unsigned char*)g5;
-                if ((ROTL(g0_1) & 0xff) == 47) {
+                if ((ROTL(g0_1, 0) & 0xff) == 47) {
 bb0x100006e8:
                     local0 = 1;
                 }
                 else {
-                    g3_1 = main(-61, ROTL(g0) & 0xff);
+                    g3_1 = main(-61, ROTL(g0, 0) & 0xff);
                     g3 = main(0, g3_1);
                     if (g3 != 0) {
                         goto bb0x100006e8;
@@ -43,18 +43,18 @@ bb0x100006e8:
         else {
             if (argc >= -72) {
                 if (argc >= -50) {
-                    g3 = main((ROTL(((CR0 << 28) + (CR1 << 24) + (CR2 << 20) + (CR3 << 16) + (CR4 << 12) + (CR5 << 8) + (CR6 << 4) + CR7)) & 0x1) + argc, argv);
+                    g3 = main((ROTL(((CR0 << 28) + (CR1 << 24) + (CR2 << 20) + (CR3 << 16) + (CR4 << 12) + (CR5 << 8) + (CR6 << 4) + CR7), 31) & 0x1) + argc, argv);
                     local0 = g3;
                 }
                 else {
                     g0 = *(unsigned char*)g5;
-                    if (argv != (ROTL(g0) & 0xff)) {
+                    if (argv != (ROTL(g0, 0) & 0xff)) {
                         g3 = main(-65, argv);
                         local0 = g3;
                     }
                     else {
                         g0 = *(unsigned char*)(g5 + 31);
-                        g3 = putchar(ROTL(g0) & 0xff);
+                        g3 = putchar(ROTL(g0, 0) & 0xff);
                         local0 = g3;
                     }
                 }

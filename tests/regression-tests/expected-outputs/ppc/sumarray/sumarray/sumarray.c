@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
     local0 = 0;
     local1 = 0;
     while (local1 <= 9) {
-        g0 = *((ROTL(local1) & ~0x3) + 0x10010958);
+        g0 = *((ROTL(local1, 2) & ~0x3) + 0x10010958);
         local0 += g0;
         local1++;
     }
