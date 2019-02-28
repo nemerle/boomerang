@@ -38,7 +38,7 @@ endif (NOT BISON_SSL2Parser_DEFINED)
 
 ADD_FLEX_BISON_DEPENDENCY(SSL2Scanner SSL2Parser)
 
-add_library(boomerang-ssl2-parser OBJECT
+add_library(boomerang-ssl2-parser STATIC
     ${BISON_SSL2Parser_OUTPUTS}
     ${FLEX_SSL2Scanner_OUTPUTS}
     SSL2ParserDriver.cpp

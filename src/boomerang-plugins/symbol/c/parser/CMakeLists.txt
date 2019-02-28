@@ -38,7 +38,7 @@ endif (NOT BISON_AnsiCParser_DEFINED)
 
 ADD_FLEX_BISON_DEPENDENCY(AnsiCScanner AnsiCParser)
 
-add_library(boomerang-ansic-parser OBJECT
+add_library(boomerang-ansic-parser STATIC
     ${BISON_AnsiCParser_OUTPUTS}
     ${FLEX_AnsiCScanner_OUTPUTS}
     AnsiCParserDriver.cpp
