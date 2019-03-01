@@ -2155,6 +2155,12 @@ FXCH.reg80 i
     *f80* i := tmpD
 ;
 
+FXCH.reg80.reg80 i, j
+    *f80* tmpD := j
+    *f80* j := i
+    *f80* i := tmpD
+;
+
 
 # IDIV
 IDIV.reg8 divisor
@@ -2331,6 +2337,10 @@ INC.rm64 val
 
 
 # INT
+INT.imm8 n
+    _
+;
+
 INT.imm16 n
     _
 ;
