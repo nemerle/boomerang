@@ -55,13 +55,13 @@ public:
         m_kind = StmtType::PhiAssign;
     }
 
-    PhiAssign(const PhiAssign &other) = default;
-    PhiAssign(PhiAssign &&other)      = default;
+    PhiAssign(const PhiAssign &other) = delete;
+    PhiAssign(PhiAssign &&other)      = delete;
 
     virtual ~PhiAssign() override { m_defs.~PhiDefs(); }
 
-    PhiAssign &operator=(const PhiAssign &other) = default;
-    PhiAssign &operator=(PhiAssign &&other) = default;
+    PhiAssign &operator=(const PhiAssign &other) = delete;
+    PhiAssign &operator=(PhiAssign &&other) = delete;
 
 public:
     iterator begin() { return m_defs.begin(); }

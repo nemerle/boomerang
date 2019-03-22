@@ -31,12 +31,12 @@ class BOOMERANG_API CallStatement : public GotoStatement
 {
 public:
     CallStatement();
-    CallStatement(const CallStatement &other) = default;
+    CallStatement(const CallStatement &other) = delete;
     CallStatement(CallStatement &&other)      = default;
 
     virtual ~CallStatement() override;
 
-    CallStatement &operator=(const CallStatement &other) = default;
+    CallStatement &operator=(const CallStatement &other) = delete;
     CallStatement &operator=(CallStatement &&other) = default;
 
 public:

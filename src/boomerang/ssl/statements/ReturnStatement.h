@@ -26,12 +26,12 @@ public:
 
 public:
     ReturnStatement();
-    ReturnStatement(const ReturnStatement &other) = default;
+    ReturnStatement(const ReturnStatement &other) = delete;
     ReturnStatement(ReturnStatement &&other)      = default;
 
     virtual ~ReturnStatement() override;
 
-    ReturnStatement &operator=(const ReturnStatement &other) = default;
+    ReturnStatement &operator=(const ReturnStatement &other) = delete;
     ReturnStatement &operator=(ReturnStatement &&other) = default;
 
 public:

@@ -22,12 +22,12 @@ public:
     /// \param fullFilePath Full absolute path to the log file
     SeparateLogger(const QString &fullFilePath);
     SeparateLogger(const SeparateLogger &other) = delete;
-    SeparateLogger(SeparateLogger &&other)      = default;
+    SeparateLogger(SeparateLogger &&other)      = delete;
 
     virtual ~SeparateLogger() override = default;
 
     SeparateLogger &operator=(const SeparateLogger &other) = delete;
-    SeparateLogger &operator=(SeparateLogger &&other) = default;
+    SeparateLogger &operator=(SeparateLogger &&other) = delete;
 
 public:
     static SeparateLogger &getOrCreateLog(const QString &name);

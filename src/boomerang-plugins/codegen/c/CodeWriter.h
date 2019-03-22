@@ -27,12 +27,12 @@ class CodeWriter
     {
         WriteDest(const QString &outFileName);
         WriteDest(const WriteDest &) = delete;
-        WriteDest(WriteDest &&)      = default;
+        WriteDest(WriteDest &&)      = delete;
 
         ~WriteDest();
 
         WriteDest &operator=(const WriteDest &) = delete;
-        WriteDest &operator=(WriteDest &&) = default;
+        WriteDest &operator=(WriteDest &&) = delete;
 
         QFile m_outFile;
         OStream m_os;
