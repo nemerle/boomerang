@@ -542,14 +542,6 @@ bool Prog::isDynamicallyLinkedProcPointer(Address dest) const
 }
 
 
-const QString &Prog::getDynamicProcName(Address addr) const
-{
-    static const QString defaultName("");
-    const BinarySymbol *sym = m_binaryFile->getSymbols()->findSymbolByAddress(addr);
-    return (sym && sym->isImportedFunction()) ? sym->getName() : defaultName;
-}
-
-
 Module *Prog::getOrInsertModuleForSymbol(const QString &symbolName)
 {
     const BinarySymbol *sym = nullptr;

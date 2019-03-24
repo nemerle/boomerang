@@ -405,16 +405,6 @@ void ProgTest::testIsDynamicallyLinkedProcPointer()
 }
 
 
-void ProgTest::testGetDynamicProcName()
-{
-    QVERIFY(m_project.loadBinaryFile(HELLO_PENTIUM));
-
-    QCOMPARE(m_project.getProg()->getDynamicProcName(Address::INVALID),    QString(""));
-    QCOMPARE(m_project.getProg()->getDynamicProcName(Address(0x080483f4)), QString(""));
-    QCOMPARE(m_project.getProg()->getDynamicProcName(Address(0x08048268)), QString("printf"));
-}
-
-
 void ProgTest::testGetOrInsertModuleForSymbol()
 {
     Prog prog("test", nullptr);

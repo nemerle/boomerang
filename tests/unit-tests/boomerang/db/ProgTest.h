@@ -54,7 +54,6 @@ private slots:
     void testIsReadOnly();
     void testIsInStringsSection();
     void testIsDynamicallyLinkedProcPointer();
-    void testGetDynamicProcName();
     void testGetOrInsertModuleForSymbol();
 
     void testReadNative4();
