@@ -46,6 +46,8 @@ matrix:
 
 
 before_script:
+  - git config remote.origin.fetch +refs/tags/*:refs/tags/*
+  - git fetch
   - docker exec -t build-env bash -c "cd boomerang &&
     mkdir build &&
     cd build &&
