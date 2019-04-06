@@ -13,6 +13,7 @@
 #include "boomerang/core/Project.h"
 #include "boomerang/ssl/type/Type.h"
 #include "boomerang/ssl/exp/Exp.h"
+#include "boomerang/db/BasicBlock.h"
 
 #include <QTest>
 
@@ -103,3 +104,4 @@ char *toString(const Exp& exp);
 char *toString(const SharedConstExp& exp);
 char *toString(const LocationSet& locSet);
 char *toString(ICLASS type);
+char *toString(BBType type);

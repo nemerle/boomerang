@@ -271,15 +271,25 @@ void BasicBlock::addSuccessor(BasicBlock *successor)
 
 void BasicBlock::removePredecessor(BasicBlock *pred)
 {
-    m_predecessors.erase(std::remove(m_predecessors.begin(), m_predecessors.end(), pred),
-                         m_predecessors.end());
+    // Only remove a single predecessor (prevents issues with double edges)
+    for (auto it = m_predecessors.begin(); it != m_predecessors.end(); ++it) {
+        if (*it == pred) {
+            m_predecessors.erase(it);
+            return;
+        }
+    }
 }
 
 
 void BasicBlock::removeSuccessor(BasicBlock *succ)
 {
-    m_successors.erase(std::remove(m_successors.begin(), m_successors.end(), succ),
-                       m_successors.end());
+    // Only remove a single successor (prevents issues with double edges)
+    for (auto it = m_successors.begin(); it != m_successors.end(); ++it) {
+        if (*it == succ) {
+            m_successors.erase(it);
+            return;
+        }
+    }
 }
 
 
@@ -573,62 +583,23 @@ void BasicBlock::simplify()
             else if (!last->back()->isBranch()) {
                 setType(BBType::Fall);
             }
+            else if (getNumSuccessors() == 2 && getSuccessor(BTHEN) == getSuccessor(BELSE)) {
+                setType(BBType::Oneway);
+            }
         }
 
         if (isType(BBType::Fall)) {
-            // set out edges to be the second one
-            LOG_VERBOSE("Turning TWOWAY into FALL: %1 %2", m_successors[0]->getLowAddr(),
-                        m_successors[1]->getLowAddr());
-
-            BasicBlock *redundant = getSuccessor(0);
-            m_successors[0]       = m_successors[1];
-            m_successors.resize(1);
-            LOG_VERBOSE("Redundant edge to address %1", redundant->getLowAddr());
-            LOG_VERBOSE("  inedges:");
-
-            std::vector<BasicBlock *> rinedges = redundant->m_predecessors;
-            redundant->m_predecessors.clear();
-
-            for (BasicBlock *redundant_edge : rinedges) {
-                if (redundant_edge != this) {
-                    LOG_VERBOSE("    %1", redundant_edge->getLowAddr());
-                    redundant->m_predecessors.push_back(redundant_edge);
-                }
-                else {
-                    LOG_VERBOSE("    %1 (ignored)", redundant_edge->getLowAddr());
-                }
-            }
-
-            // redundant->m_iNumInEdges = redundant->m_InEdges.size();
-            LOG_VERBOSE("  after: %1", m_successors[0]->getLowAddr());
+            BasicBlock *redundant = getSuccessor(BTHEN);
+            this->removeSuccessor(redundant);
+            redundant->removePredecessor(this);
+        }
+        else if (isType(BBType::Oneway)) {
+            BasicBlock *redundant = getSuccessor(BELSE);
+            this->removeSuccessor(redundant);
+            redundant->removePredecessor(this);
         }
 
-        if (isType(BBType::Oneway)) {
-            // set out edges to be the first one
-            LOG_VERBOSE("Turning TWOWAY into ONEWAY: %1 %2", m_successors[0]->getLowAddr(),
-                        m_successors[1]->getLowAddr());
-
-            BasicBlock *redundant = m_successors[BELSE];
-            m_successors.resize(1);
-            LOG_VERBOSE("redundant edge to address %1", redundant->getLowAddr());
-            LOG_VERBOSE("  inedges:");
-
-            std::vector<BasicBlock *> rinedges = redundant->m_predecessors;
-            redundant->m_predecessors.clear();
-
-            for (BasicBlock *redundant_edge : rinedges) {
-                if (redundant_edge != this) {
-                    LOG_VERBOSE("    %1", redundant_edge->getLowAddr());
-                    redundant->m_predecessors.push_back(redundant_edge);
-                }
-                else {
-                    LOG_VERBOSE("    %1 (ignored)", redundant_edge->getLowAddr());
-                }
-            }
-
-            // redundant->m_iNumInEdges = redundant->m_InEdges.size();
-            LOG_VERBOSE("  after: %1", m_successors[0]->getLowAddr());
-        }
+        assert(static_cast<UserProc *>(m_function)->getCFG()->isWellFormed());
     }
 }
 

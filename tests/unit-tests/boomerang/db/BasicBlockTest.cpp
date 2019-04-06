@@ -13,6 +13,7 @@
 #include "boomerang/db/BasicBlock.h"
 #include "boomerang/ssl/RTL.h"
 #include "boomerang/db/proc/LibProc.h"
+#include "boomerang/db/proc/UserProc.h"
 #include "boomerang/ssl/statements/BranchStatement.h"
 #include "boomerang/ssl/statements/ImplicitAssign.h"
 #include "boomerang/ssl/statements/PhiAssign.h"
@@ -525,6 +526,29 @@ void BasicBlockTest::testHasStatement()
 
     GotoStatement jump2(Address(0x2000));
     QVERIFY(!bb2.hasStatement(&jump2));
+}
+
+
+void BasicBlockTest::testSimplify()
+{
+    UserProc proc(Address(0x1000), "test", nullptr);
+
+    std::unique_ptr<RTLList> rtls(new RTLList);
+    rtls->push_back(std::unique_ptr<RTL>(new RTL(Address(0x1000), { new BranchStatement() })));
+    BasicBlock *bb1 = proc.getCFG()->createBB(BBType::Twoway, std::move(rtls));
+
+    rtls.reset(new RTLList);
+    rtls->push_back(std::unique_ptr<RTL>(new RTL(Address(0x2000), { new CallStatement() })));
+    BasicBlock *bb2 = proc.getCFG()->createBB(BBType::Twoway, std::move(rtls));
+
+    proc.getCFG()->addEdge(bb1, bb2);
+    proc.getCFG()->addEdge(bb1, bb2);
+
+    bb1->simplify();
+    QCOMPARE(bb1->getType(), BBType::Oneway);
+    QCOMPARE(bb1->getNumSuccessors(), 1);
+    QVERIFY(bb1->isPredecessorOf(bb2));
+    QVERIFY(bb2->isSuccessorOf(bb1));
 }
 
 
