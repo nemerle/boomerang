@@ -7,6 +7,7 @@ v0.5.0 (in development)
 - Fixed: Crash when decompiling x86 binaries that contain functions where the first instruction is BSF or BSR.
 - Fixed: Crash when decompiling x86 binaries that contain functions where the first instruction is a string instruction.
 - Fixed: Crash when decompiling x86 binaries that contain instructions accessing FS or GS segment registers.
+- Fixed: Crash when decompiling SPARC binaries containing calls to helper functions.
 - Fixed: Crash when decompiling tail-recursive functions.
 - Fixed: Crash when decompiling branches that have the same destination for both branch edges.
 - Fixed: Crash when removing an empty jump in a delay slot on SPARC.

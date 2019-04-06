@@ -135,7 +135,7 @@ void SPARCFrontEnd::case_unhandled_stub(Address addr)
 
 
 bool SPARCFrontEnd::case_CALL(Address &address, DecodeResult &inst, DecodeResult &delayInst,
-                              std::unique_ptr<RTLList> BB_rtls, UserProc *proc,
+                              std::unique_ptr<RTLList> &BB_rtls, UserProc *proc,
                               std::list<CallStatement *> &callList, bool isPattern /* = false*/)
 {
     // Aliases for the call and delay RTLs
@@ -725,7 +725,7 @@ bool SPARCFrontEnd::processProc(UserProc *proc, Address pc)
                         // resore semantics chop off one level of return address)
                         static_cast<CallStatement *>(last)->setReturnAfterCall(true);
                         sequentialDecode = false;
-                        case_CALL(pc, inst, nop_inst, std::move(BB_rtls), proc, callList, true);
+                        case_CALL(pc, inst, nop_inst, BB_rtls, proc, callList, true);
                         break;
                     }
 
@@ -757,8 +757,8 @@ bool SPARCFrontEnd::processProc(UserProc *proc, Address pc)
                                 *rhs->getSubExp1() == *o7) {
                                 // Get the constant
                                 const int K = rhs->access<Const, 2>()->getInt();
-                                case_CALL(pc, inst, delayInst, std::move(BB_rtls), proc, callList,
-                                          true);
+                                case_CALL(pc, inst, delayInst, BB_rtls, proc, callList, true);
+
                                 // We don't generate a goto; instead, we just decode from the new
                                 // address Note: the call to case_CALL has already incremented
                                 // address by 8, so don't do again
@@ -771,8 +771,7 @@ bool SPARCFrontEnd::processProc(UserProc *proc, Address pc)
                                 // after this call
                                 static_cast<CallStatement *>(last)->setReturnAfterCall(true);
                                 sequentialDecode = false;
-                                case_CALL(pc, inst, delayInst, std::move(BB_rtls), proc, callList,
-                                          true);
+                                case_CALL(pc, inst, delayInst, BB_rtls, proc, callList, true);
                                 break;
                             }
                         }
@@ -789,8 +788,7 @@ bool SPARCFrontEnd::processProc(UserProc *proc, Address pc)
                     // we put the delay instruction before the jump or call
                     if (last->getKind() == StmtType::Call) {
                         // This is a call followed by an NCT/NOP
-                        sequentialDecode = case_CALL(pc, inst, delayInst, std::move(BB_rtls), proc,
-                                                     callList);
+                        sequentialDecode = case_CALL(pc, inst, delayInst, BB_rtls, proc, callList);
                     }
                     else {
                         // This is a non-call followed by an NCT/NOP

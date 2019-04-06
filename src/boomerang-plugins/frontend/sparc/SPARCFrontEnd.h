@@ -148,7 +148,7 @@ private:
      * \returns true if next instruction is to be fetched sequentially from this one
      */
     bool case_CALL(Address &address, DecodeResult &inst, DecodeResult &delay_inst,
-                   std::unique_ptr<RTLList> BB_rtls, UserProc *proc,
+                   std::unique_ptr<RTLList> &BB_rtls, UserProc *proc,
                    std::list<CallStatement *> &callList, bool isPattern = false);
 
     /**
