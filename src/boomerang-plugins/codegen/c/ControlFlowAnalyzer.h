@@ -10,6 +10,11 @@
 #pragma once
 
 
+#include "StmtASTNode.h"
+
+#include "boomerang/ssl/statements/Statement.h"
+
+#include <map>
 #include <unordered_map>
 #include <vector>
 
@@ -88,7 +93,7 @@ enum class SBBType : uint8_t
 
 
 /// Holds all information about control Flow Structure.
-struct BBStructInfo
+struct NodeStructInfo
 {
     /// Control flow analysis stuff, lifted from Doug Simon's honours thesis.
     int m_postOrderIndex    = -1; ///< node's position within the ordering structure
@@ -117,12 +122,12 @@ struct BBStructInfo
     LoopType m_loopHeaderType      = LoopType::Invalid; ///< the loop type of a loop header
 
     // analysis information
-    const BasicBlock *m_immPDom    = nullptr; ///< immediate post dominator
-    const BasicBlock *m_loopHead   = nullptr; ///< head of the most nested enclosing loop
-    const BasicBlock *m_caseHead   = nullptr; ///< head of the most nested enclosing case
-    const BasicBlock *m_condFollow = nullptr; ///< follow of a conditional header
-    const BasicBlock *m_loopFollow = nullptr; ///< follow of a loop header
-    const BasicBlock *m_latchNode  = nullptr; ///< latching node of a loop header
+    const StmtASTNode *m_immPDom    = nullptr; ///< immediate post dominator
+    const StmtASTNode *m_loopHead   = nullptr; ///< head of the most nested enclosing loop
+    const StmtASTNode *m_caseHead   = nullptr; ///< head of the most nested enclosing case
+    const StmtASTNode *m_condFollow = nullptr; ///< follow of a conditional header
+    const StmtASTNode *m_loopFollow = nullptr; ///< follow of a loop header
+    const StmtASTNode *m_latchNode  = nullptr; ///< latching node of a loop header
 };
 
 
@@ -140,95 +145,99 @@ public:
     void structureCFG(ProcCFG *cfg);
 
     /// establish if \p source has a back edge to \p dest
-    bool isBackEdge(const BasicBlock *source, const BasicBlock *dest) const;
+    bool isBackEdge(const StmtASTNode *source, const StmtASTNode *dest) const;
 
 public:
-    inline bool isLatchNode(const BasicBlock *bb) const
+    inline bool isLatchNode(const StmtASTNode *n) const
     {
-        const BasicBlock *loopHead = getLoopHead(bb);
+        const StmtASTNode *loopHead = getLoopHead(n);
         if (!loopHead) {
             return false;
         }
 
-        return getLatchNode(loopHead) == bb;
+        return getLatchNode(loopHead) == n;
     }
 
-    inline const BasicBlock *getLatchNode(const BasicBlock *bb) const
+    inline const StmtASTNode *getLatchNode(const StmtASTNode *bb) const
     {
         return m_info[bb].m_latchNode;
     }
 
-    inline const BasicBlock *getLoopHead(const BasicBlock *bb) const
+    inline const StmtASTNode *getLoopHead(const StmtASTNode *bb) const
     {
         return m_info[bb].m_loopHead;
     }
 
-    inline const BasicBlock *getLoopFollow(const BasicBlock *bb) const
+    inline const StmtASTNode *getLoopFollow(const StmtASTNode *bb) const
     {
         return m_info[bb].m_loopFollow;
     }
 
-    inline const BasicBlock *getCondFollow(const BasicBlock *bb) const
+    inline const StmtASTNode *getCondFollow(const StmtASTNode *bb) const
     {
         return m_info[bb].m_condFollow;
     }
 
-    inline const BasicBlock *getCaseHead(const BasicBlock *bb) const
+    inline const StmtASTNode *getCaseHead(const StmtASTNode *bb) const
     {
         return m_info[bb].m_caseHead;
     }
 
-    TravType getTravType(const BasicBlock *bb) const { return m_info[bb].m_travType; }
-    StructType getStructType(const BasicBlock *bb) const { return m_info[bb].m_structuringType; }
-    CondType getCondType(const BasicBlock *bb) const;
-    UnstructType getUnstructType(const BasicBlock *bb) const;
-    LoopType getLoopType(const BasicBlock *bb) const;
+    TravType getTravType(const StmtASTNode *bb) const { return m_info[bb].m_travType; }
+    StructType getStructType(const StmtASTNode *bb) const { return m_info[bb].m_structuringType; }
+    CondType getCondType(const StmtASTNode *bb) const;
+    UnstructType getUnstructType(const StmtASTNode *bb) const;
+    LoopType getLoopType(const StmtASTNode *bb) const;
 
-    void setTravType(const BasicBlock *bb, TravType type) { m_info[bb].m_travType = type; }
-    void setStructType(const BasicBlock *bb, StructType s);
+    void setTravType(const StmtASTNode *bb, TravType type) { m_info[bb].m_travType = type; }
+    void setStructType(const StmtASTNode *bb, StructType s);
 
-    bool isCaseOption(const BasicBlock *bb) const;
+    bool isCaseOption(const StmtASTNode *bb) const;
 
 private:
-    void updateLoopStamps(const BasicBlock *bb, int &time);
-    void updateRevLoopStamps(const BasicBlock *bb, int &time);
-    void updateRevOrder(const BasicBlock *bb);
+    void updateLoopStamps(const StmtASTNode *bb, int &time);
+    void updateRevLoopStamps(const StmtASTNode *bb, int &time);
+    void updateRevOrder(const StmtASTNode *bb);
 
-    void setLoopHead(const BasicBlock *bb, const BasicBlock *head) { m_info[bb].m_loopHead = head; }
-    void setLatchNode(const BasicBlock *bb, const BasicBlock *latch)
+    void setLoopHead(const StmtASTNode *bb, const StmtASTNode *head)
+    {
+        m_info[bb].m_loopHead = head;
+    }
+    void setLatchNode(const StmtASTNode *bb, const StmtASTNode *latch)
     {
         m_info[bb].m_latchNode = latch;
     }
 
-    void setCaseHead(const BasicBlock *bb, const BasicBlock *head, const BasicBlock *follow);
+    void setCaseHead(const StmtASTNode *bb, const StmtASTNode *head, const StmtASTNode *follow);
 
-    void setUnstructType(const BasicBlock *bb, UnstructType unstructType);
-    void setLoopType(const BasicBlock *bb, LoopType loopType);
-    void setCondType(const BasicBlock *bb, CondType condType);
+    void setUnstructType(const StmtASTNode *bb, UnstructType unstructType);
+    void setLoopType(const StmtASTNode *bb, LoopType loopType);
+    void setCondType(const StmtASTNode *bb, CondType condType);
 
-    void setLoopFollow(const BasicBlock *bb, const BasicBlock *follow)
+    void setLoopFollow(const StmtASTNode *bb, const StmtASTNode *follow)
     {
         m_info[bb].m_loopFollow = follow;
     }
 
-    void setCondFollow(const BasicBlock *bb, const BasicBlock *follow)
+    void setCondFollow(const StmtASTNode *bb, const StmtASTNode *follow)
     {
         m_info[bb].m_condFollow = follow;
     }
 
     /// establish if this bb has any back edges leading FROM it
-    bool hasBackEdge(const BasicBlock *bb) const;
+    bool hasBackEdge(const StmtASTNode *bb) const;
 
     /// \returns true if \p bb is an ancestor of \p other
-    bool isAncestorOf(const BasicBlock *bb, const BasicBlock *other) const;
-    bool isBBInLoop(const BasicBlock *bb, const BasicBlock *header, const BasicBlock *latch) const;
+    bool isAncestorOf(const StmtASTNode *bb, const StmtASTNode *other) const;
+    bool isBBInLoop(const StmtASTNode *bb, const StmtASTNode *header,
+                    const StmtASTNode *latch) const;
 
-    int getPostOrdering(const BasicBlock *bb) const { return m_info[bb].m_postOrderIndex; }
-    int getRevOrd(const BasicBlock *bb) const { return m_info[bb].m_revPostOrderIndex; }
+    int getPostOrdering(const StmtASTNode *bb) const { return m_info[bb].m_postOrderIndex; }
+    int getRevOrd(const StmtASTNode *bb) const { return m_info[bb].m_revPostOrderIndex; }
 
-    const BasicBlock *getImmPDom(const BasicBlock *bb) const { return m_info[bb].m_immPDom; }
+    const StmtASTNode *getImmPDom(const StmtASTNode *bb) const { return m_info[bb].m_immPDom; }
 
-    void setImmPDom(const BasicBlock *bb, const BasicBlock *immPDom)
+    void setImmPDom(const StmtASTNode *bb, const StmtASTNode *immPDom)
     {
         m_info[bb].m_immPDom = immPDom;
     }
@@ -263,37 +272,49 @@ private:
 
     /// Finds the common post dominator of the current immediate post dominator and its successor's
     /// immediate post dominator
-    const BasicBlock *findCommonPDom(const BasicBlock *curImmPDom, const BasicBlock *succImmPDom);
+    const StmtASTNode *findCommonPDom(const StmtASTNode *curImmPDom,
+                                      const StmtASTNode *succImmPDom);
 
     /// \pre  The loop induced by (head,latch) has already had all its member nodes tagged
     /// \post The type of loop has been deduced
-    void determineLoopType(const BasicBlock *header, bool *&loopNodes);
+    void determineLoopType(const StmtASTNode *header, bool *&loopNodes);
 
     /// \pre  The loop headed by header has been induced and all it's member nodes have been tagged
     /// \post The follow of the loop has been determined.
-    void findLoopFollow(const BasicBlock *header, bool *&loopNodes);
+    void findLoopFollow(const StmtASTNode *header, bool *&loopNodes);
 
     /// \pre header has been detected as a loop header and has the details of the
     ///        latching node
     /// \post the nodes within the loop have been tagged
-    void tagNodesInLoop(const BasicBlock *header, bool *&loopNodes);
+    void tagNodesInLoop(const StmtASTNode *header, bool *&loopNodes);
 
-    BasicBlock *findEntryBB() const;
-    BasicBlock *findExitBB() const;
+    void dumpStmtCFGToFile() const;
+
+    SharedConstStmt findSuccessorStmt(const SharedConstStmt &stmt,
+                                      const BasicBlock *successorBB) const;
+
+public:
+    StmtASTNode *findEntryNode() const;
+
+private:
+    StmtASTNode *findExitNode() const;
+    void rebuildASTForest();
 
 private:
     ProcCFG *m_cfg = nullptr;
 
+    std::map<SharedConstStmt, StmtASTNode *> m_nodes;
+
     /// Post Ordering according to a DFS starting at the entry BB.
-    std::vector<const BasicBlock *> m_postOrdering;
+    std::vector<const StmtASTNode *> m_postOrdering;
 
     /// Post Ordering according to a DFS starting at the exit BB (usually the return BB).
     /// Note that this is not the reverse of m_postOrdering
     /// for functions containing calls to noreturn functions or infinite loops.
-    std::vector<const BasicBlock *> m_revPostOrdering;
+    std::vector<const StmtASTNode *> m_revPostOrdering;
 
 private:
     /// mutable to allow using the map in const methods (might create entries).
     /// DO NOT change BBStructInfo in const methods!
-    mutable std::unordered_map<const BasicBlock *, BBStructInfo> m_info;
+    mutable std::unordered_map<const StmtASTNode *, NodeStructInfo> m_info;
 };

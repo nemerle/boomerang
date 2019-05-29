@@ -5,14 +5,14 @@ int main(int argc, char *argv[]);
 int main(int argc, char *argv[])
 {
     if ((unsigned int)argc > 7) {
-bb0x10000438:
+lab_4:
         puts("Other!");
         break;
     }
     switch(argc) {
     case 0:
     case 1:
-        goto bb0x10000438;
+        goto lab_4;
     case 7:
         puts("Seven!");
         break;

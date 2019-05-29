@@ -25,6 +25,7 @@
 #include "boomerang/ssl/exp/Ternary.h"
 #include "boomerang/ssl/exp/TypedExp.h"
 #include "boomerang/ssl/statements/BoolAssign.h"
+#include "boomerang/ssl/statements/BranchStatement.h"
 #include "boomerang/ssl/statements/CallStatement.h"
 #include "boomerang/ssl/statements/CaseStatement.h"
 #include "boomerang/ssl/statements/ReturnStatement.h"
@@ -381,13 +382,13 @@ void CCodeGenerator::addReturnStatement(const StatementList *rets)
 void CCodeGenerator::removeUnusedLabels()
 {
     for (QStringList::iterator it = m_lines.begin(); it != m_lines.end();) {
-        if (it->startsWith("bb0x") && it->contains(':')) {
-            QStringRef bbAddrString = it->midRef(4, it->indexOf(':') - 4);
-            bool ok                 = false;
-            Address bbAddr(bbAddrString.toLongLong(&ok, 16));
+        if (it->startsWith("lab_") && it->contains(':')) {
+            QStringRef bbNumberStr = it->midRef(4, it->indexOf(':') - 4);
+            bool ok                = false;
+            int stmtNumber         = bbNumberStr.toInt(&ok, 16);
             assert(ok);
 
-            if (m_usedLabels.find(bbAddr.value()) == m_usedLabels.end()) {
+            if (m_usedLabels.find(stmtNumber) == m_usedLabels.end()) {
                 it = m_lines.erase(it);
                 continue;
             }
@@ -445,8 +446,8 @@ void CCodeGenerator::generateCode(UserProc *proc)
     }
 
     // Start generating "real" code
-    std::list<const BasicBlock *> followSet, gotoSet;
-    generateCode(proc->getEntryBB(), nullptr, followSet, gotoSet, proc);
+    std::list<const StmtASTNode *> followSet, gotoSet;
+    generateCode(m_analyzer.findEntryNode(), nullptr, followSet, gotoSet, proc);
 
     addProcEnd();
 
@@ -822,15 +823,15 @@ void CCodeGenerator::addIfElseCondEnd()
 }
 
 
-void CCodeGenerator::addGoto(const BasicBlock *bb)
+void CCodeGenerator::addGoto(const StmtASTNode *bb)
 {
     QString tgt;
     OStream s(&tgt);
 
     indent(s, m_indent);
-    s << "goto bb0x" << QString::number(bb->getLowAddr().value(), 16) << ";";
+    s << "goto lab_" << QString::number(bb->getStatement()->getNumber()) << ";";
     appendLine(tgt);
-    m_usedLabels.insert(bb->getLowAddr().value());
+    m_usedLabels.insert(bb->getStatement()->getNumber());
 }
 
 
@@ -856,12 +857,12 @@ void CCodeGenerator::addBreak()
 }
 
 
-void CCodeGenerator::addLabel(const BasicBlock *bb)
+void CCodeGenerator::addLabel(const StmtASTNode *bb)
 {
     QString tgt;
     OStream s(&tgt);
 
-    s << "bb0x" << QString::number(bb->getLowAddr().value(), 16) << ":";
+    s << "lab_" << QString::number(bb->getStatement()->getNumber()) << ":";
     appendLine(tgt);
 }
 
@@ -2101,13 +2102,13 @@ void CCodeGenerator::closeParen(OStream &str, OpPrec outer, OpPrec inner)
 }
 
 
-void CCodeGenerator::generateCode(const BasicBlock *bb, const BasicBlock *latch,
-                                  std::list<const BasicBlock *> &followSet,
-                                  std::list<const BasicBlock *> &gotoSet, UserProc *proc)
+void CCodeGenerator::generateCode(const StmtASTNode *bb, const StmtASTNode *latch,
+                                  std::list<const StmtASTNode *> &followSet,
+                                  std::list<const StmtASTNode *> &gotoSet, UserProc *proc)
 {
     // If this is the follow for the most nested enclosing conditional, then don't generate
     // anything. Otherwise if it is in the follow set generate a goto to the follow
-    const BasicBlock *enclFollow = followSet.empty() ? nullptr : followSet.back();
+    const StmtASTNode *enclFollow = followSet.empty() ? nullptr : followSet.back();
 
     if (Util::isContained(gotoSet, bb) && !m_analyzer.isLatchNode(bb) &&
         ((latch && m_analyzer.getLoopHead(latch) &&
@@ -2183,9 +2184,10 @@ void CCodeGenerator::generateCode(const BasicBlock *bb, const BasicBlock *latch,
 }
 
 
-void CCodeGenerator::generateCode_Loop(const BasicBlock *bb, std::list<const BasicBlock *> &gotoSet,
-                                       UserProc *proc, const BasicBlock *latch,
-                                       std::list<const BasicBlock *> &followSet)
+void CCodeGenerator::generateCode_Loop(const StmtASTNode *bb,
+                                       std::list<const StmtASTNode *> &gotoSet, UserProc *proc,
+                                       const StmtASTNode *latch,
+                                       std::list<const StmtASTNode *> &followSet)
 {
     // add the follow of the loop (if it exists) to the follow set
     if (m_analyzer.getLoopFollow(bb)) {
@@ -2199,7 +2201,7 @@ void CCodeGenerator::generateCode_Loop(const BasicBlock *bb, std::list<const Bas
         writeBB(bb);
 
         // write the 'while' predicate
-        SharedExp cond = bb->getCond();
+        SharedExp cond = bb->getStatement<BranchStatement>()->getCondExpr();
 
         if (bb->getSuccessor(BTHEN) == m_analyzer.getLoopFollow(bb)) {
             cond = Unary::get(opLNot, cond)->simplify();
@@ -2208,9 +2210,9 @@ void CCodeGenerator::generateCode_Loop(const BasicBlock *bb, std::list<const Bas
         addPretestedLoopHeader(cond);
 
         // write the code for the body of the loop
-        const BasicBlock *loopBody = (bb->getSuccessor(BELSE) == m_analyzer.getLoopFollow(bb))
-                                         ? bb->getSuccessor(BTHEN)
-                                         : bb->getSuccessor(BELSE);
+        const StmtASTNode *loopBody = (bb->getSuccessor(BELSE) == m_analyzer.getLoopFollow(bb))
+                                          ? bb->getSuccessor(BTHEN)
+                                          : bb->getSuccessor(BELSE);
         generateCode(loopBody, m_analyzer.getLatchNode(bb), followSet, gotoSet, proc);
 
         // if code has not been generated for the latch node, generate it now
@@ -2260,11 +2262,11 @@ void CCodeGenerator::generateCode_Loop(const BasicBlock *bb, std::list<const Bas
                 writeBB(m_analyzer.getLatchNode(bb));
             }
 
-            const BasicBlock *myLatch = m_analyzer.getLatchNode(bb);
-            const BasicBlock *myHead  = m_analyzer.getLoopHead(myLatch);
-            assert(myLatch->isType(BBType::Twoway));
+            const StmtASTNode *myLatch = m_analyzer.getLatchNode(bb);
+            const StmtASTNode *myHead  = m_analyzer.getLoopHead(myLatch);
+            assert(myLatch->getStatement()->isBranch());
 
-            SharedExp cond = myLatch->getCond();
+            SharedExp cond = myLatch->getStatement<BranchStatement>()->getCondExpr();
             if (myLatch->getSuccessor(BELSE) == myHead) {
                 addPostTestedLoopEnd(Unary::get(opLNot, cond)->simplify());
             }
@@ -2301,10 +2303,10 @@ void CCodeGenerator::generateCode_Loop(const BasicBlock *bb, std::list<const Bas
 }
 
 
-void CCodeGenerator::generateCode_Branch(const BasicBlock *bb,
-                                         std::list<const BasicBlock *> &gotoSet, UserProc *proc,
-                                         const BasicBlock *latch,
-                                         std::list<const BasicBlock *> &followSet)
+void CCodeGenerator::generateCode_Branch(const StmtASTNode *bb,
+                                         std::list<const StmtASTNode *> &gotoSet, UserProc *proc,
+                                         const StmtASTNode *latch,
+                                         std::list<const StmtASTNode *> &followSet)
 {
     // reset this back to LoopCond if it was originally of this type
     if (m_analyzer.getLatchNode(bb) != nullptr) {
@@ -2313,7 +2315,7 @@ void CCodeGenerator::generateCode_Branch(const BasicBlock *bb,
 
     // for 2 way conditional headers that are effectively jumps into
     // or out of a loop or case body, we will need a new follow node
-    const BasicBlock *tmpCondFollow = nullptr;
+    const StmtASTNode *tmpCondFollow = nullptr;
 
     // keep track of how many nodes were added to the goto set so that
     // the correct number are removed
@@ -2338,9 +2340,10 @@ void CCodeGenerator::generateCode_Branch(const BasicBlock *bb,
         else {
             if (m_analyzer.getUnstructType(bb) == UnstructType::JumpInOutLoop) {
                 // define the loop header to be compared against
-                const BasicBlock *myLoopHead = (m_analyzer.getStructType(bb) == StructType::LoopCond
-                                                    ? bb
-                                                    : m_analyzer.getLoopHead(bb));
+                const StmtASTNode *myLoopHead = (m_analyzer.getStructType(bb) ==
+                                                         StructType::LoopCond
+                                                     ? bb
+                                                     : m_analyzer.getLoopHead(bb));
                 gotoSet.push_back(m_analyzer.getCondFollow(bb));
                 gotoTotal++;
 
@@ -2374,16 +2377,14 @@ void CCodeGenerator::generateCode_Branch(const BasicBlock *bb,
     const SwitchInfo *psi = nullptr; // Init to nullptr to suppress a warning
 
     if (m_analyzer.getCondType(bb) == CondType::Case) {
-        // The CaseStatement will be in the last RTL this BB
-        RTL *last                         = bb->getRTLs()->back().get();
-        std::shared_ptr<CaseStatement> cs = last->getHlStmt()->as<CaseStatement>();
-        psi                               = cs->getSwitchInfo();
+        std::shared_ptr<const CaseStatement> cs = bb->getStatement<CaseStatement>();
+        psi                                     = cs->getSwitchInfo();
 
         // Write the switch header (i.e. "switch (var) {")
         addCaseCondHeader(psi->switchExp);
     }
     else {
-        SharedExp cond = bb->getCond();
+        SharedExp cond = bb->getStatement<BranchStatement>()->getCondExpr();
 
         if (!cond) {
             cond = Const::get(Address(0xfeedface)); // hack, but better than a crash
@@ -2404,7 +2405,7 @@ void CCodeGenerator::generateCode_Branch(const BasicBlock *bb,
 
     // write code for the body of the conditional
     if (m_analyzer.getCondType(bb) != CondType::Case) {
-        const BasicBlock *succ = bb->getSuccessor(
+        const StmtASTNode *succ = bb->getSuccessor(
             (m_analyzer.getCondType(bb) == CondType::IfElse) ? BELSE : BTHEN);
         assert(succ != nullptr);
 
@@ -2447,12 +2448,12 @@ void CCodeGenerator::generateCode_Branch(const BasicBlock *bb,
 
         if (psi) {
             // first, determine the optimal fall-through ordering
-            std::list<std::pair<SharedExp, const BasicBlock *>>
+            std::list<std::pair<SharedExp, const StmtASTNode *>>
                 switchDests = computeOptimalCaseOrdering(bb, psi);
 
             for (auto it = switchDests.begin(); it != switchDests.end(); ++it) {
-                SharedExp caseValue    = it->first;
-                const BasicBlock *succ = it->second;
+                SharedExp caseValue     = it->first;
+                const StmtASTNode *succ = it->second;
 
                 addCaseCondOption(caseValue);
                 if (std::next(it) != switchDests.end() && std::next(it)->second == succ) {
@@ -2502,16 +2503,17 @@ void CCodeGenerator::generateCode_Branch(const BasicBlock *bb,
 }
 
 
-void CCodeGenerator::generateCode_Seq(const BasicBlock *bb, std::list<const BasicBlock *> &gotoSet,
-                                      UserProc *proc, const BasicBlock *latch,
-                                      std::list<const BasicBlock *> &followSet)
+void CCodeGenerator::generateCode_Seq(const StmtASTNode *bb,
+                                      std::list<const StmtASTNode *> &gotoSet, UserProc *proc,
+                                      const StmtASTNode *latch,
+                                      std::list<const StmtASTNode *> &followSet)
 {
     // generate code for the body of this block
     writeBB(bb);
 
     // return if this is the 'return' block (i.e. has no out edges) after emitting a 'return'
     // statement
-    if (bb->getType() == BBType::Ret) {
+    if (bb->getStatement()->isReturn()) {
         // This should be emitted now, like a normal statement
         // addReturnStatement(getReturnVal());
         return;
@@ -2519,14 +2521,11 @@ void CCodeGenerator::generateCode_Seq(const BasicBlock *bb, std::list<const Basi
 
     // return if this doesn't have any out edges (emit a warning)
     if (bb->getNumSuccessors() == 0) {
-        LOG_WARN("No out edge for BB at address %1, in proc %2", bb->getLowAddr(), proc->getName());
+        //         LOG_WARN("No out edge for BB at address %1, in proc %2", bb->getLowAddr(),
+        //         proc->getName());
 
-        if (bb->getType() == BBType::CompJump) {
-            assert(!bb->getRTLs()->empty());
-            RTL *lastRTL = bb->getRTLs()->back().get();
-            assert(!lastRTL->empty());
-
-            std::shared_ptr<GotoStatement> gs = lastRTL->back()->as<GotoStatement>();
+        if (bb->getStatement()->isGoto()) {
+            std::shared_ptr<const GotoStatement> gs = bb->getStatement<GotoStatement>();
             if (gs && gs->getDest()) {
                 addLineComment("goto " + gs->getDest()->toString());
             }
@@ -2538,35 +2537,37 @@ void CCodeGenerator::generateCode_Seq(const BasicBlock *bb, std::list<const Basi
         return;
     }
 
-    const BasicBlock *succ = bb->getSuccessor(0);
+    const StmtASTNode *succ = bb->getSuccessor(0);
 
     if (bb->getNumSuccessors() > 1) {
-        const BasicBlock *other = bb->getSuccessor(1);
+        const StmtASTNode *other = bb->getSuccessor(1);
         LOG_MSG("Found seq with more than one outedge!");
-        std::shared_ptr<Const> constDest = std::dynamic_pointer_cast<Const>(bb->getDest());
+        std::shared_ptr<Const>
+            constDest = bb->getStatement<GotoStatement>()->getDest()->access<Const>();
 
-        if (constDest && constDest->isIntConst() && (constDest->getAddr() == succ->getLowAddr())) {
-            std::swap(other, succ);
-            LOG_MSG("Taken branch is first out edge");
-        }
+        //         if (constDest && constDest->isIntConst() && (constDest->getAddr() ==
+        //         succ->getLowAddr())) {
+        //             std::swap(other, succ);
+        //             LOG_MSG("Taken branch is first out edge");
+        //         }
 
-        SharedExp cond = bb->getCond();
+        //         SharedExp cond = bb->getCond();
 
-        if (cond) {
-            addIfCondHeader(bb->getCond());
+        //         if (cond) {
+        //             addIfCondHeader(bb->getCond());
 
-            if (isGenerated(other)) {
-                emitGotoAndLabel(bb, other);
-            }
-            else {
-                generateCode(other, latch, followSet, gotoSet, proc);
-            }
-
-            addIfCondEnd();
+        if (isGenerated(other)) {
+            emitGotoAndLabel(bb, other);
         }
         else {
-            LOG_ERROR("Last statement is not a cond, don't know what to do with this.");
+            generateCode(other, latch, followSet, gotoSet, proc);
         }
+
+        addIfCondEnd();
+        //         }
+        //         else {
+        LOG_ERROR("Last statement is not a cond, don't know what to do with this.");
+        //         }
     }
 
     // Generate code for its successor if
@@ -2606,7 +2607,7 @@ void CCodeGenerator::generateCode_Seq(const BasicBlock *bb, std::list<const Basi
 }
 
 
-void CCodeGenerator::emitGotoAndLabel(const BasicBlock *bb, const BasicBlock *dest)
+void CCodeGenerator::emitGotoAndLabel(const StmtASTNode *bb, const StmtASTNode *dest)
 {
     if (m_analyzer.getLoopHead(bb) &&
         ((m_analyzer.getLoopHead(bb) == dest) ||
@@ -2618,7 +2619,7 @@ void CCodeGenerator::emitGotoAndLabel(const BasicBlock *bb, const BasicBlock *de
             addBreak();
         }
     }
-    else if (dest->isType(BBType::Ret)) {
+    else if (dest->getStatement()->isReturn()) {
         // a goto to a return -> just emit the return statement
         writeBB(dest);
     }
@@ -2628,27 +2629,17 @@ void CCodeGenerator::emitGotoAndLabel(const BasicBlock *bb, const BasicBlock *de
 }
 
 
-void CCodeGenerator::writeBB(const BasicBlock *bb)
+void CCodeGenerator::writeBB(const StmtASTNode *bb)
 {
     if (m_proc->getProg()->getProject()->getSettings()->debugGen) {
-        LOG_MSG("Generating code for BB at address %1", bb->getLowAddr());
+        LOG_MSG("Generating code for stmt %1", bb->getStatement()->getNumber());
     }
 
     // Allocate space for a label to be generated for this node and add this to the generated code.
     // The actual label can then be generated now or back patched later
     addLabel(bb);
 
-    if (bb->getRTLs()) {
-        for (const auto &rtl : *(bb->getRTLs())) {
-            if (m_proc->getProg()->getProject()->getSettings()->debugGen) {
-                LOG_MSG("%1", rtl->getAddress());
-            }
-
-            for (const SharedStmt st : *rtl) {
-                emitCodeForStmt(st);
-            }
-        }
-    }
+    emitCodeForStmt(bb->getStatement());
 }
 
 
@@ -2674,9 +2665,9 @@ void CCodeGenerator::appendLine(const QString &s)
 }
 
 
-bool CCodeGenerator::isAllParentsGenerated(const BasicBlock *bb) const
+bool CCodeGenerator::isAllParentsGenerated(const StmtASTNode *bb) const
 {
-    for (BasicBlock *pred : bb->getPredecessors()) {
+    for (StmtASTNode *pred : bb->getPredecessors()) {
         if (!m_analyzer.isBackEdge(pred, bb) && !isGenerated(pred)) {
             return false;
         }
@@ -2686,7 +2677,7 @@ bool CCodeGenerator::isAllParentsGenerated(const BasicBlock *bb) const
 }
 
 
-bool CCodeGenerator::isGenerated(const BasicBlock *bb) const
+bool CCodeGenerator::isGenerated(const StmtASTNode *bb) const
 {
     return m_generatedBBs.find(bb) != m_generatedBBs.end();
 }
@@ -2751,14 +2742,14 @@ void CCodeGenerator::emitCodeForStmt(const SharedConstStmt &st)
 }
 
 
-std::list<std::pair<SharedExp, const BasicBlock *>>
-CCodeGenerator::computeOptimalCaseOrdering(const BasicBlock *caseHead, const SwitchInfo *psi)
+std::list<std::pair<SharedExp, const StmtASTNode *>>
+CCodeGenerator::computeOptimalCaseOrdering(const StmtASTNode *caseHead, const SwitchInfo *psi)
 {
-    using CaseEntry = std::pair<SharedExp, const BasicBlock *>;
+    using CaseEntry = std::pair<SharedExp, const StmtASTNode *>;
     std::list<CaseEntry> result;
 
     for (int i = 0; i < caseHead->getNumSuccessors(); ++i) {
-        const BasicBlock *origSucc = caseHead->getSuccessor(i);
+        const StmtASTNode *origSucc = caseHead->getSuccessor(i);
         SharedExp caseVal;
         if (psi->switchType == SwitchType::F) { // "Fortran" style?
             // Yes, use the table value itself
@@ -2769,9 +2760,8 @@ CCodeGenerator::computeOptimalCaseOrdering(const BasicBlock *caseHead, const Swi
             caseVal = Const::get(static_cast<int>(psi->lowerBound + i));
         }
 
-        const BasicBlock *realSucc = origSucc;
-        while (realSucc->getNumSuccessors() == 1 &&
-               (realSucc->isEmpty() || realSucc->isEmptyJump())) {
+        const StmtASTNode *realSucc = origSucc;
+        while (realSucc->getNumSuccessors() == 1 && realSucc->getStatement()->isGoto()) {
             realSucc = realSucc->getSuccessor(0);
         }
 
@@ -2779,12 +2769,12 @@ CCodeGenerator::computeOptimalCaseOrdering(const BasicBlock *caseHead, const Swi
     }
 
     result.sort([](const CaseEntry &left, const CaseEntry &right) {
-        const BasicBlock *leftBB  = left.second;
-        const BasicBlock *rightBB = right.second;
+        const StmtASTNode *leftBB  = left.second;
+        const StmtASTNode *rightBB = right.second;
 
-        const BasicBlock *leftSucc = leftBB;
+        const StmtASTNode *leftSucc = leftBB;
 
-        while (leftSucc->getType() != BBType::Ret) {
+        while (leftSucc->getStatement()->isReturn()) {
             if (leftSucc == rightBB) {
                 return leftBB != rightBB; // the left case is a fallthrough to the right case
             }
@@ -2808,7 +2798,7 @@ CCodeGenerator::computeOptimalCaseOrdering(const BasicBlock *caseHead, const Swi
         }
 
         // No fallthrough found; compare by address
-        return leftBB->getLowAddr() < rightBB->getLowAddr();
+        return leftBB->getStatement()->getNumber() < rightBB->getStatement()->getNumber();
     });
 
     return result;
