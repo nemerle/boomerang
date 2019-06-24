@@ -10,7 +10,7 @@
 #pragma once
 
 
-#include "StmtASTNode.h"
+#include "ast/StmtASTNode.h"
 
 #include "boomerang/ssl/statements/Statement.h"
 
