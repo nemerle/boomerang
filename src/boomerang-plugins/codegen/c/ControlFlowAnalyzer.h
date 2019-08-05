@@ -158,88 +158,92 @@ public:
         return getLatchNode(loopHead) == n;
     }
 
-    inline const StmtASTNode *getLatchNode(const StmtASTNode *bb) const
+    inline const StmtASTNode *getLatchNode(const StmtASTNode *node) const
     {
-        return m_info[bb].m_latchNode;
+        return m_info[node].m_latchNode;
     }
 
-    inline const StmtASTNode *getLoopHead(const StmtASTNode *bb) const
+    inline const StmtASTNode *getLoopHead(const StmtASTNode *node) const
     {
-        return m_info[bb].m_loopHead;
+        return m_info[node].m_loopHead;
     }
 
-    inline const StmtASTNode *getLoopFollow(const StmtASTNode *bb) const
+    inline const StmtASTNode *getLoopFollow(const StmtASTNode *node) const
     {
-        return m_info[bb].m_loopFollow;
+        return m_info[node].m_loopFollow;
     }
 
-    inline const StmtASTNode *getCondFollow(const StmtASTNode *bb) const
+    inline const StmtASTNode *getCondFollow(const StmtASTNode *node) const
     {
-        return m_info[bb].m_condFollow;
+        return m_info[node].m_condFollow;
     }
 
-    inline const StmtASTNode *getCaseHead(const StmtASTNode *bb) const
+    inline const StmtASTNode *getCaseHead(const StmtASTNode *node) const
     {
-        return m_info[bb].m_caseHead;
+        return m_info[node].m_caseHead;
     }
 
-    TravType getTravType(const StmtASTNode *bb) const { return m_info[bb].m_travType; }
-    StructType getStructType(const StmtASTNode *bb) const { return m_info[bb].m_structuringType; }
-    CondType getCondType(const StmtASTNode *bb) const;
-    UnstructType getUnstructType(const StmtASTNode *bb) const;
-    LoopType getLoopType(const StmtASTNode *bb) const;
+    TravType getTravType(const StmtASTNode *node) const { return m_info[node].m_travType; }
+    StructType getStructType(const StmtASTNode *node) const
+    {
+        return m_info[node].m_structuringType;
+    }
+    CondType getCondType(const StmtASTNode *node) const;
+    UnstructType getUnstructType(const StmtASTNode *node) const;
+    LoopType getLoopType(const StmtASTNode *node) const;
 
-    void setTravType(const StmtASTNode *bb, TravType type) { m_info[bb].m_travType = type; }
-    void setStructType(const StmtASTNode *bb, StructType s);
+    void setTravType(const StmtASTNode *node, TravType type) { m_info[node].m_travType = type; }
+    void setStructType(const StmtASTNode *node, StructType s);
 
-    bool isCaseOption(const StmtASTNode *bb) const;
+    bool isCaseOption(const StmtASTNode *node) const;
 
 private:
-    void updateLoopStamps(const StmtASTNode *bb, int &time);
-    void updateRevLoopStamps(const StmtASTNode *bb, int &time);
-    void updateRevOrder(const StmtASTNode *bb);
+    void updateLoopStamps(const StmtASTNode *node, int &time);
+    void updateRevLoopStamps(const StmtASTNode *node, int &time);
+    void updateRevOrder(const StmtASTNode *node);
 
-    void setLoopHead(const StmtASTNode *bb, const StmtASTNode *head)
+    void setLoopHead(const StmtASTNode *node, const StmtASTNode *head)
     {
-        m_info[bb].m_loopHead = head;
-    }
-    void setLatchNode(const StmtASTNode *bb, const StmtASTNode *latch)
-    {
-        m_info[bb].m_latchNode = latch;
+        m_info[node].m_loopHead = head;
     }
 
-    void setCaseHead(const StmtASTNode *bb, const StmtASTNode *head, const StmtASTNode *follow);
-
-    void setUnstructType(const StmtASTNode *bb, UnstructType unstructType);
-    void setLoopType(const StmtASTNode *bb, LoopType loopType);
-    void setCondType(const StmtASTNode *bb, CondType condType);
-
-    void setLoopFollow(const StmtASTNode *bb, const StmtASTNode *follow)
+    void setLatchNode(const StmtASTNode *node, const StmtASTNode *latch)
     {
-        m_info[bb].m_loopFollow = follow;
+        m_info[node].m_latchNode = latch;
     }
 
-    void setCondFollow(const StmtASTNode *bb, const StmtASTNode *follow)
+    void setCaseHead(const StmtASTNode *node, const StmtASTNode *head, const StmtASTNode *follow);
+
+    void setUnstructType(const StmtASTNode *node, UnstructType unstructType);
+    void setLoopType(const StmtASTNode *node, LoopType loopType);
+    void setCondType(const StmtASTNode *node, CondType condType);
+
+    void setLoopFollow(const StmtASTNode *node, const StmtASTNode *follow)
     {
-        m_info[bb].m_condFollow = follow;
+        m_info[node].m_loopFollow = follow;
+    }
+
+    void setCondFollow(const StmtASTNode *node, const StmtASTNode *follow)
+    {
+        m_info[node].m_condFollow = follow;
     }
 
     /// establish if this bb has any back edges leading FROM it
-    bool hasBackEdge(const StmtASTNode *bb) const;
+    bool hasBackEdge(const StmtASTNode *node) const;
 
     /// \returns true if \p bb is an ancestor of \p other
-    bool isAncestorOf(const StmtASTNode *bb, const StmtASTNode *other) const;
-    bool isBBInLoop(const StmtASTNode *bb, const StmtASTNode *header,
-                    const StmtASTNode *latch) const;
+    bool isAncestorOf(const StmtASTNode *node, const StmtASTNode *other) const;
+    bool isNodeInLoop(const StmtASTNode *node, const StmtASTNode *header,
+                      const StmtASTNode *latch) const;
 
-    int getPostOrdering(const StmtASTNode *bb) const { return m_info[bb].m_postOrderIndex; }
-    int getRevOrd(const StmtASTNode *bb) const { return m_info[bb].m_revPostOrderIndex; }
+    int getPostOrdering(const StmtASTNode *node) const { return m_info[node].m_postOrderIndex; }
+    int getRevOrd(const StmtASTNode *node) const { return m_info[node].m_revPostOrderIndex; }
 
-    const StmtASTNode *getImmPDom(const StmtASTNode *bb) const { return m_info[bb].m_immPDom; }
+    const StmtASTNode *getImmPDom(const StmtASTNode *node) const { return m_info[node].m_immPDom; }
 
-    void setImmPDom(const StmtASTNode *bb, const StmtASTNode *immPDom)
+    void setImmPDom(const StmtASTNode *node, const StmtASTNode *immPDom)
     {
-        m_info[bb].m_immPDom = immPDom;
+        m_info[node].m_immPDom = immPDom;
     }
 
     void unTraverse();
