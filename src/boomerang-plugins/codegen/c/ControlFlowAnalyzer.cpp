@@ -873,7 +873,7 @@ void ControlFlowAnalyzer::dumpStmtCFGToFile() const
     ost << "\n";
 
     for (auto &[stmt, node] : m_nodes) {
-        if (stmt->isBranch()) {
+        if (stmt->isBranch() && node->getNumSuccessors() == 2) {
             ost << "stmt" << stmt->getNumber() << " -> stmt"
                 << node->getSuccessor(BTHEN)->getStatement()->getNumber() << "[color=green];\n";
             ost << "stmt" << stmt->getNumber() << " -> stmt"

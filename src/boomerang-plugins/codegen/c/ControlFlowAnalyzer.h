@@ -188,6 +188,7 @@ public:
     {
         return m_info[node].m_structuringType;
     }
+
     CondType getCondType(const StmtASTNode *node) const;
     UnstructType getUnstructType(const StmtASTNode *node) const;
     LoopType getLoopType(const StmtASTNode *node) const;
