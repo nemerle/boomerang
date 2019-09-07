@@ -58,7 +58,7 @@ public:
     PhiAssign(const PhiAssign &other) = delete;
     PhiAssign(PhiAssign &&other)      = delete;
 
-    virtual ~PhiAssign() override { m_defs.~PhiDefs(); }
+    virtual ~PhiAssign() override {}
 
     PhiAssign &operator=(const PhiAssign &other) = delete;
     PhiAssign &operator=(PhiAssign &&other) = delete;
@@ -125,19 +125,6 @@ public:
 
     void removeAllReferences(const std::shared_ptr<RefExp> &ref);
 
-    /// Convert this PhiAssignment to an ordinary Assignment.
-    /// Hopefully, this is the only place that Statements change from
-    /// one class to another.  All throughout the code, we assume that the addresses of Statement
-    /// objects do not change, so we need this slight hack to overwrite one object with another
-    void convertToAssign(SharedExp rhs);
-
 private:
-    union
-    {
-        PhiDefs m_defs; ///< A vector of information about definitions
-        Byte m_padding[sizeof(Assign) - sizeof(Assignment)];
-    };
+    PhiDefs m_defs; ///< A vector of information about definitions
 };
-
-static_assert(sizeof(PhiAssign) >= sizeof(Assign),
-              "Size of phi must not be smaller than size of Assign");

@@ -263,6 +263,55 @@ bool UserProc::insertStatementAfter(Statement *afterThis, Statement *stmt)
 }
 
 
+Assign *UserProc::replacePhiByAssign(const PhiAssign *orig, const SharedExp &rhs)
+{
+    // I believe we always want to propagate to these ex-phi's; check!:
+    SharedExp newRhs = rhs->propagateAll();
+
+    for (BasicBlock *bb : *m_cfg) {
+        for (const auto &rtl : *bb->getRTLs()) {
+            for (RTL::iterator ss = rtl->begin(); ss != rtl->end(); ++ss) {
+                if (*ss == orig) {
+                    // convert *ss to an Assign
+                    Assign *asgn(new Assign(orig->getLeft()->clone(), newRhs));
+
+                    asgn->setType(orig->getType()->clone());
+                    asgn->setNumber(orig->getNumber());
+                    asgn->setProc(orig->getProc());
+                    asgn->setBB(bb);
+
+                    delete *ss;
+                    *ss = asgn;
+
+                    StatementList stmts;
+                    getStatements(stmts);
+
+                    for (Statement *stmt : stmts) {
+                        LocationSet used;
+                        stmt->addUsedLocs(used, true);
+
+                        std::list<SharedExp> refs;
+                        for (auto &u : used) {
+                            u->searchAll(RefExp(Terminal::get(opWild), const_cast<PhiAssign *>(orig)), refs);
+                        }
+
+                        for (SharedExp &ref : refs) {
+                            assert(ref->isSubscript());
+                            ref->access<RefExp>()->setDef(asgn);
+                        }
+                    }
+
+                    return asgn;
+                }
+            }
+        }
+    }
+
+
+    return nullptr;
+}
+
+
 void UserProc::addParameterToSignature(SharedExp e, SharedType ty)
 {
     // In case it's already an implicit argument:

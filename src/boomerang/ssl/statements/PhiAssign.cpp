@@ -203,74 +203,9 @@ bool PhiAssign::accept(StmtPartModifier *v)
 }
 
 
-void PhiAssign::convertToAssign(SharedExp rhs)
-{
-    // I believe we always want to propagate to these ex-phi's; check!:
-    rhs = rhs->propagateAll();
-    // Thanks to tamlin for this cleaner way of implementing this hack
-
-    int n            = m_number; // These items disappear with the destructor below
-    BasicBlock *bb   = m_bb;
-    UserProc *p      = m_proc;
-    SharedExp lhs_   = m_lhs;
-    SharedExp rhs_   = rhs;
-    SharedType type_ = m_type;
-
-    this->~PhiAssign(); // Explicitly destroy this, but keep the memory allocated.
-    Assign *a = new (this) Assign(type_, lhs_, rhs_); // construct in-place. Note that 'a' == 'this'
-    a->setNumber(n);
-    a->setProc(p);
-    a->setBB(bb);
-}
-
-
 void PhiAssign::simplify()
 {
     m_lhs = m_lhs->simplify();
-
-    if (m_defs.empty()) {
-        return;
-    }
-
-    bool allSame        = true;
-    Statement *firstDef = (*begin())->getDef();
-
-    for (auto &refExp : *this) {
-        if (refExp->getDef() != firstDef) {
-            allSame = false;
-            break;
-        }
-    }
-
-    if (allSame) {
-        LOG_VERBOSE("all the same in %1", this);
-        this->convertToAssign(RefExp::get(m_lhs, firstDef));
-        return;
-    }
-
-    bool onlyOneNotThis = true;
-    Statement *notthis  = STMT_WILD;
-
-    for (const std::shared_ptr<RefExp> &ref : *this) {
-        Statement *def = ref->getDef();
-        if (def == this) {
-            continue; // ok
-        }
-        else if (notthis == STMT_WILD) {
-            notthis = def;
-        }
-        else {
-            onlyOneNotThis = false;
-            break;
-        }
-    }
-
-    if (onlyOneNotThis && (notthis != STMT_WILD)) {
-        LOG_VERBOSE("All but one not this in %1", this);
-
-        this->convertToAssign(RefExp::get(m_lhs, notthis));
-        return;
-    }
 }
 
 

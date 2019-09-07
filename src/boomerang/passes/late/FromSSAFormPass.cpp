@@ -308,7 +308,7 @@ bool FromSSAFormPass::execute(UserProc *proc)
                 // Need to replace the phi by an expression,
                 // e.g. local0 = phi(r24{3}, r24{5}) becomes
                 //        local0 = r24
-                phi->convertToAssign(first->clone());
+                proc->replacePhiByAssign(phi, first->clone());
             }
         }
         else {
@@ -333,7 +333,7 @@ bool FromSSAFormPass::execute(UserProc *proc)
             }
 
             // Replace the RHS of the phi with tempLoc
-            phi->convertToAssign(tempLoc);
+            proc->replacePhiByAssign(phi, tempLoc);
         }
     }
 

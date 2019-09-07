@@ -157,6 +157,14 @@ public:
     /// So this is an inefficient linear search!
     bool insertStatementAfter(Statement *afterThis, Statement *stmt);
 
+    /// Searches for the phi assignment \p orig and if found, replaces the RHS with \p newRhs
+    /// (converting it to an ordiary assign). If successful, the new Assign is returned,
+    /// otherwise nullptr.
+    ///
+    /// Example: (newRhs = r28{2})
+    ///  r24 := phi(r25{5}, r27{6})  -> r24 := r28{2}
+    Assign *replacePhiByAssign(const PhiAssign *orig, const SharedExp &newRhs);
+
 public:
     // parameter related
 

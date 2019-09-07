@@ -290,7 +290,7 @@ void ProcDecompiler::middleDecompile(UserProc *proc)
     // this is now inherent in the visitor nature of the latest algorithm.
     // Bypass children that are finalised (if any)
     PassManager::get()->executePass(PassID::CallAndPhiFix, proc);
-    proc->debugPrintAll("After call and phi bypass (1)");
+    proc->debugPrintAll("after call and phi bypass (1)");
 
     if (proc->getStatus() != ProcStatus::InCycle) { // FIXME: need this test?
         PassManager::get()->executePass(PassID::StatementPropagation, proc);

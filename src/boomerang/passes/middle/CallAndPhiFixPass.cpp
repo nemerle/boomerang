@@ -214,8 +214,8 @@ bool CallAndPhiFixPass::execute(UserProc *proc)
                 // if all parameters are calls
             }
 
-            phi->convertToAssign(best);
-            LOG_VERBOSE2("Redundant phi replaced with copy assign; now %1", phi);
+            Assign *asgn = proc->replacePhiByAssign(phi, best);
+            LOG_VERBOSE2("Redundant phi replaced with copy assign; now %1", asgn);
         }
     }
 
