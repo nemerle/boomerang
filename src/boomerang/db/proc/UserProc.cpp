@@ -31,6 +31,7 @@
 #include "boomerang/util/UseGraphWriter.h"
 #include "boomerang/util/log/Log.h"
 #include "boomerang/util/log/SeparateLogger.h"
+#include "boomerang/visitor/stmtmodifier/StmtSubscriptReplacer.h"
 
 
 UserProc::UserProc(Address address, const QString &name, Module *module)
@@ -265,7 +266,7 @@ bool UserProc::insertStatementAfter(Statement *afterThis, Statement *stmt)
 
 Assign *UserProc::replacePhiByAssign(const PhiAssign *orig, const SharedExp &rhs)
 {
-    // I believe we always want to propagate to these ex-phi's; check!:
+    // I believe we always want to propagate to these ex-phi's; check!
     SharedExp newRhs = rhs->propagateAll();
 
     for (BasicBlock *bb : *m_cfg) {
@@ -280,27 +281,20 @@ Assign *UserProc::replacePhiByAssign(const PhiAssign *orig, const SharedExp &rhs
                     asgn->setProc(orig->getProc());
                     asgn->setBB(bb);
 
-                    delete *ss;
+                    Statement *toDelete = *ss;
                     *ss = asgn;
 
                     StatementList stmts;
                     getStatements(stmts);
 
+                    // replace all refs orig -> asgn
                     for (Statement *stmt : stmts) {
-                        LocationSet used;
-                        stmt->addUsedLocs(used, true);
+                        StmtSubscriptReplacer stmtMod(orig, asgn);
 
-                        std::list<SharedExp> refs;
-                        for (auto &u : used) {
-                            u->searchAll(RefExp(Terminal::get(opWild), const_cast<PhiAssign *>(orig)), refs);
-                        }
-
-                        for (SharedExp &ref : refs) {
-                            assert(ref->isSubscript());
-                            ref->access<RefExp>()->setDef(asgn);
-                        }
+                        stmt->accept(&stmtMod);
                     }
 
+                    delete toDelete;
                     return asgn;
                 }
             }

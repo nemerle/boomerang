@@ -29,6 +29,7 @@ list(APPEND boomerang-visitor-sources
     visitor/expmodifier/ExpSimplifier
     visitor/expmodifier/ExpSSAXformer
     visitor/expmodifier/ExpSubscripter
+    visitor/expmodifier/ExpSubscriptReplacer
     visitor/expmodifier/ImplicitConverter
     visitor/expmodifier/Localiser
     visitor/expmodifier/SimpExpModifier
@@ -41,6 +42,7 @@ list(APPEND boomerang-visitor-sources
     visitor/stmtmodifier/StmtPartModifier
     visitor/stmtmodifier/StmtSSAXFormer
     visitor/stmtmodifier/StmtSubscripter
+    visitor/stmtmodifier/StmtSubscriptReplacer
 
     visitor/stmtexpvisitor/StmtConstFinder
     visitor/stmtexpvisitor/StmtDestCounter
