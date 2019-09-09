@@ -9,7 +9,6 @@
 #pragma endregion License
 #include "ExpSubscriptReplacer.h"
 
-
 #include "boomerang/ssl/exp/RefExp.h"
 
 

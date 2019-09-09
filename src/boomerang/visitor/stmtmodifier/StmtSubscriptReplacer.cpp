@@ -9,7 +9,6 @@
 #pragma endregion License
 #include "StmtSubscriptReplacer.h"
 
-
 #include "boomerang/ssl/statements/PhiAssign.h"
 #include "boomerang/visitor/expmodifier/ExpSubscriptReplacer.h"
 

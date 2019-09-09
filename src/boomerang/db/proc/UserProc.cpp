@@ -283,7 +283,7 @@ Assign *UserProc::replacePhiByAssign(const PhiAssign *orig, const SharedExp &rhs
                     asgn->setBB(bb);
 
                     Statement *toDelete = *ss;
-                    *ss = asgn;
+                    *ss                 = asgn;
 
                     StatementList stmts;
                     getStatements(stmts);
@@ -304,7 +304,7 @@ Assign *UserProc::replacePhiByAssign(const PhiAssign *orig, const SharedExp &rhs
 
                         if (esr.isModified()) {
                             SharedExp local = it->second;
-                            it = m_symbolMap.erase(it);
+                            it              = m_symbolMap.erase(it);
                             newSymbols.insert({ exp, local });
                         }
                         else {
