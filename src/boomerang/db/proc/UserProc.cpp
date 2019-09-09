@@ -31,6 +31,7 @@
 #include "boomerang/util/UseGraphWriter.h"
 #include "boomerang/util/log/Log.h"
 #include "boomerang/util/log/SeparateLogger.h"
+#include "boomerang/visitor/expmodifier/ExpSubscriptReplacer.h"
 #include "boomerang/visitor/stmtmodifier/StmtSubscriptReplacer.h"
 
 
@@ -294,13 +295,33 @@ Assign *UserProc::replacePhiByAssign(const PhiAssign *orig, const SharedExp &rhs
                         stmt->accept(&stmtMod);
                     }
 
+                    SymbolMap newSymbols;
+
+                    for (auto it = m_symbolMap.begin(); it != m_symbolMap.end();) {
+                        SharedExp exp = (*it).first->clone();
+                        ExpSubscriptReplacer esr(orig, asgn);
+                        exp->acceptModifier(&esr);
+
+                        if (esr.isModified()) {
+                            SharedExp local = it->second;
+                            it = m_symbolMap.erase(it);
+                            newSymbols.insert({ exp, local });
+                        }
+                        else {
+                            ++it;
+                        }
+                    }
+
+                    for (auto elem : newSymbols) {
+                        m_symbolMap.insert(elem);
+                    }
+
                     delete toDelete;
                     return asgn;
                 }
             }
         }
     }
-
 
     return nullptr;
 }
