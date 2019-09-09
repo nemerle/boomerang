@@ -143,8 +143,8 @@ QString RTL::toString() const
 void RTL::simplify()
 {
     for (iterator it = begin(); it != end();) {
+        (*it)->simplify();
         Statement *s = *it;
-        s->simplify();
 
         if (s->isBranch()) {
             SharedExp cond = static_cast<BranchStatement *>(s)->getCondExpr();
