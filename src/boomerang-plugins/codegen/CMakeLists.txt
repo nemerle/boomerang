@@ -15,6 +15,11 @@ include_directories(
 BOOMERANG_ADD_CODEGEN(
     NAME "C"
     SOURCES
+        c/ast/ASTNode.cpp
+        c/ast/ASTNode.h
+        c/ast/StmtASTNode.cpp
+        c/ast/StmtASTNode.h
+
         c/CCodeGenerator.cpp
         c/CCodeGenerator.h
         c/CodeWriter.cpp

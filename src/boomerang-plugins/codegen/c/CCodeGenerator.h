@@ -26,7 +26,6 @@
 #include <unordered_set>
 
 
-class BasicBlock;
 class Exp;
 class LocationSet;
 class BinaryImage;
@@ -210,7 +209,7 @@ private:
     void addIfElseCondEnd();
 
     // goto, break, continue, etc
-    void addGoto(const BasicBlock *bb);
+    void addGoto(const StmtASTNode *bb);
 
     /// Adds: continue;
     void addContinue();
@@ -220,7 +219,7 @@ private:
 
     // labels
     /// Adds: L \a ord :
-    void addLabel(const BasicBlock *bb);
+    void addLabel(const StmtASTNode *bb);
 
     // proc related
     /**
@@ -280,32 +279,32 @@ private:
     void closeParen(OStream &str, OpPrec outer, OpPrec inner);
 
 
-    void generateCode(const BasicBlock *bb, const BasicBlock *latch,
-                      std::list<const BasicBlock *> &followSet,
-                      std::list<const BasicBlock *> &gotoSet, UserProc *proc);
-    void generateCode_Loop(const BasicBlock *bb, std::list<const BasicBlock *> &gotoSet,
-                           UserProc *proc, const BasicBlock *latch,
-                           std::list<const BasicBlock *> &followSet);
-    void generateCode_Branch(const BasicBlock *bb, std::list<const BasicBlock *> &gotoSet,
-                             UserProc *proc, const BasicBlock *latch,
-                             std::list<const BasicBlock *> &followSet);
-    void generateCode_Seq(const BasicBlock *bb, std::list<const BasicBlock *> &gotoSet,
-                          UserProc *proc, const BasicBlock *latch,
-                          std::list<const BasicBlock *> &followSet);
+    void generateCode(const StmtASTNode *bb, const StmtASTNode *latch,
+                      std::list<const StmtASTNode *> &followSet,
+                      std::list<const StmtASTNode *> &gotoSet, UserProc *proc);
+    void generateCode_Loop(const StmtASTNode *bb, std::list<const StmtASTNode *> &gotoSet,
+                           UserProc *proc, const StmtASTNode *latch,
+                           std::list<const StmtASTNode *> &followSet);
+    void generateCode_Branch(const StmtASTNode *bb, std::list<const StmtASTNode *> &gotoSet,
+                             UserProc *proc, const StmtASTNode *latch,
+                             std::list<const StmtASTNode *> &followSet);
+    void generateCode_Seq(const StmtASTNode *bb, std::list<const StmtASTNode *> &gotoSet,
+                          UserProc *proc, const StmtASTNode *latch,
+                          std::list<const StmtASTNode *> &followSet);
 
     /// Emits a goto statement (at the correct indentation level) with the destination label for
     /// dest. Also places the label just before the destination code if it isn't already there. If
     /// the goto is to the return block, it would be nice to emit a 'return' instead (but would have
     /// to duplicate the other code in that return BB).    Also, 'continue' and 'break' statements
     /// are used instead if possible
-    void emitGotoAndLabel(const BasicBlock *bb, const BasicBlock *dest);
+    void emitGotoAndLabel(const StmtASTNode *bb, const StmtASTNode *dest);
 
     /// Generates code for each non-CTI (except procedure calls) statement within the block.
-    void writeBB(const BasicBlock *bb);
+    void writeBB(const StmtASTNode *bb);
 
     /// \returns true if all predecessors of this BB have had their code generated.
-    bool isAllParentsGenerated(const BasicBlock *bb) const;
-    bool isGenerated(const BasicBlock *bb) const;
+    bool isAllParentsGenerated(const StmtASTNode *bb) const;
+    bool isGenerated(const StmtASTNode *bb) const;
 
     void emitCodeForStmt(const SharedConstStmt &stmt);
 
@@ -316,8 +315,8 @@ private:
      * The value or the case label is determined by the value of the first part of the pair,
      * the jump destination for the case is determined by the second part of the pair.
      */
-    std::list<std::pair<SharedExp, const BasicBlock *>>
-    computeOptimalCaseOrdering(const BasicBlock *caseHead, const SwitchInfo *switchInfo);
+    std::list<std::pair<SharedExp, const StmtASTNode *>>
+    computeOptimalCaseOrdering(const StmtASTNode *caseHead, const SwitchInfo *switchInfo);
 
 private:
     void print(const Module *module);
@@ -330,10 +329,10 @@ private:
     void appendLine(const QString &s);
 
 private:
-    int m_indent = 0;                                     ///< Current indentation depth
-    std::map<QString, SharedType> m_locals;               ///< All locals in a Proc
-    std::unordered_set<Address::value_type> m_usedLabels; ///< All used goto labels. (lowAddr of BB)
-    std::unordered_set<const BasicBlock *> m_generatedBBs;
+    int m_indent = 0;                       ///< Current indentation depth
+    std::map<QString, SharedType> m_locals; ///< All locals in a Proc
+    std::unordered_set<int> m_usedLabels;   ///< All used goto labels. (lowAddr of BB)
+    std::unordered_set<const StmtASTNode *> m_generatedBBs;
 
     UserProc *m_proc = nullptr;
     ControlFlowAnalyzer m_analyzer;
