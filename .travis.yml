@@ -22,10 +22,10 @@ matrix:
         - HOMEBREW_NO_INSTALL_CLEANUP=1 brew install qt capstone bison flex ccache
         - mkdir build &&
           cd build &&
-          cmake \
-            -DQt5_DIR=$(brew --prefix qt5)/lib/cmake/Qt5/ \
-            -DFLEX_EXECUTABLE=$(brew --prefix flex)/bin/flex \
-            -DBISON_EXECUTABLE=$(brew --prefix bison)/bin/bison \
+          cmake
+            -DQt5_DIR=$(brew --prefix qt5)/lib/cmake/Qt5/
+            -DFLEX_EXECUTABLE=$(brew --prefix flex)/bin/flex
+            -DBISON_EXECUTABLE=$(brew --prefix bison)/bin/bison
             -DBOOMERANG_BUILD_UNIT_TESTS=ON ..
       script:
         - make -j$(sysctl -n hw.ncpu) && make test
