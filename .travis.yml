@@ -12,6 +12,7 @@ addons:
 install:
   - docker run -d --name build-env -v $(pwd):/home/boomerang/boomerang/ -v /home/travis/.ccache/:/home/boomerang/.ccache ceeac/boomerang-build-env:$TARGET tail -f /dev/null
 
+
 matrix:
   include:
     - os: osx
@@ -19,49 +20,63 @@ matrix:
       install:
       before_script:
         - HOMEBREW_NO_INSTALL_CLEANUP=1 brew install qt capstone bison flex ccache
-        - mkdir build && cd build
+        - mkdir build &&
+          cd build &&
+          cmake \
+            -DQt5_DIR=$(brew --prefix qt5)/lib/cmake/Qt5/ \
+            -DFLEX_EXECUTABLE=$(brew --prefix flex)/bin/flex \
+            -DBISON_EXECUTABLE=$(brew --prefix bison)/bin/bison \
+            -DBOOMERANG_BUILD_UNIT_TESTS=ON ..
       script:
-        - cmake -DQt5_DIR=$(brew --prefix qt5)/lib/cmake/Qt5/ -DFLEX_EXECUTABLE=$(brew --prefix flex)/bin/flex -DBISON_EXECUTABLE=$(brew --prefix bison)/bin/bison -DBOOMERANG_BUILD_UNIT_TESTS=ON ..
         - make -j$(sysctl -n hw.ncpu) && make test
-    - env:
-        - TARGET="source-check"
-      before_script:
-      script:
-        - docker exec -t build-env bash -c "cd boomerang && ./scripts/run-clang-format.py -r src/ -e */machO/objc/*"
-    - env:
-        - TARGET="clang6-debug"     BUILD_TYPE="Debug"          UNIT_TESTS="ON"  REGRESSION_TESTS="OFF" COVERAGE="OFF"
-    - env:
-        - TARGET="clang7-release"   BUILD_TYPE="Release"        UNIT_TESTS="ON"  REGRESSION_TESTS="OFF" COVERAGE="OFF"
-    - env:
-        - TARGET="gcc7-release"     BUILD_TYPE="Release"        UNIT_TESTS="ON"  REGRESSION_TESTS="OFF" COVERAGE="OFF"
-    - env:
-        - TARGET="gcc8-regress-cov" BUILD_TYPE="RelWithDebInfo" UNIT_TESTS="OFF" REGRESSION_TESTS="ON"  COVERAGE="ON"
-      script:
-        - docker exec -t build-env bash -c "cd boomerang/build && make -j$(nproc) && make check"
-      after_success:
-        - echo "Building CodeCov reports" && docker exec -t build-env bash -c "cd boomerang/build &&
-            lcov --directory . --capture --output-file coverage.info &&
-            lcov -r coverage.info '*.l' '/usr/*' '*/tests/unit-tests/*' --output-file coverage.info &&
-            lcov --list coverage.info"
-        - echo "Uploading CodeCov reports" && bash <(curl -s https://codecov.io/bash) -X gcov -X coveragepy -X xcode -F regresstests -s "$(pwd)/build" || echo \"CodeCov coverage report generation failed!\"
+
     - env:
         - TARGET="gcc8-debug-cov"   BUILD_TYPE="Debug"          UNIT_TESTS="ON"  REGRESSION_TESTS="OFF" COVERAGE="ON"
-      after_success:
+      script:
+        - docker exec -t build-env bash -c "cd boomerang/build && make -j$(nproc) && (make test || ctest -V --rerun-failed) && make package"
         - echo "Building CodeCov reports" && docker exec -t build-env bash -c "cd boomerang/build &&
             lcov --directory . --capture --output-file coverage.info &&
             lcov -r coverage.info '*.l' '/usr/*' '*/tests/unit-tests/*' --output-file coverage.info &&
             lcov --list coverage.info"
         - echo "Uploading CodeCov reports" && bash <(curl -s https://codecov.io/bash) -X gcov -X coveragepy -X xcode -F unittests -s "$(pwd)/build" || echo \"CodeCov coverage report generation failed!\"
 
+    - env:
+        - TARGET="gcc8-regress-cov" BUILD_TYPE="RelWithDebInfo" UNIT_TESTS="OFF" REGRESSION_TESTS="ON"  COVERAGE="ON"
+      script:
+        - docker exec -t build-env bash -c "cd boomerang/build && make -j$(nproc) && make check"
+        - echo "Building CodeCov reports" && docker exec -t build-env bash -c "cd boomerang/build &&
+            lcov --directory . --capture --output-file coverage.info &&
+            lcov -r coverage.info '*.l' '/usr/*' '*/tests/unit-tests/*' --output-file coverage.info &&
+            lcov --list coverage.info"
+        - echo "Uploading CodeCov reports" && bash <(curl -s https://codecov.io/bash) -X gcov -X coveragepy -X xcode -F regresstests -s "$(pwd)/build" || echo \"CodeCov coverage report generation failed!\"
+
+    - env:
+        - TARGET="clang6-debug"     BUILD_TYPE="Debug"          UNIT_TESTS="ON"  REGRESSION_TESTS="OFF" COVERAGE="OFF"
+      script:
+        - docker exec -t build-env bash -c "cd boomerang/build && make -j$(nproc) && (make test || ctest -V --rerun-failed) && make package"
+
+    - env:
+        - TARGET="clang7-release"   BUILD_TYPE="Release"        UNIT_TESTS="ON"  REGRESSION_TESTS="OFF" COVERAGE="OFF"
+      script:
+        - docker exec -t build-env bash -c "cd boomerang/build && make -j$(nproc) && (make test || ctest -V --rerun-failed) && make package"
+
+    - env:
+        - TARGET="gcc7-release"     BUILD_TYPE="Release"        UNIT_TESTS="ON"  REGRESSION_TESTS="OFF" COVERAGE="OFF"
+      script:
+        - docker exec -t build-env bash -c "cd boomerang/build && make -j$(nproc) && (make test || ctest -V --rerun-failed) && make package"
+
+    - env:
+        - TARGET="source-check"
+      before_script:
+      script:
+        - docker exec -t build-env bash -c "cd boomerang && ./scripts/run-clang-format.py -r src/ -e */machO/objc/*"
+
+
 before_script:
   - docker exec -t build-env bash -c "cd boomerang &&
     mkdir build &&
     cd build &&
     cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBOOMERANG_BUILD_UNIT_TESTS=$UNIT_TESTS -DBOOMERANG_BUILD_REGRESSION_TESTS=$REGRESSION_TESTS -DBOOMERANG_ENABLE_COVERAGE=$COVERAGE .."
-
-
-script:
-  - docker exec -t build-env bash -c "cd boomerang/build && make -j$(nproc) && (make test || ctest -V --rerun-failed) && make package"
 
 
 notifications:
