@@ -54,7 +54,7 @@ void Module::updateLibrarySignatures()
             std::shared_ptr<Signature> sig = m_prog->getLibSignature(func->getName());
             if (*sig != *func->getSignature()) {
                 func->setSignature(sig);
-                for (const std::shared_ptr<CallStatement> call_stmt : func->getCallers()) {
+                for (const std::shared_ptr<CallStatement> &call_stmt : func->getCallers()) {
                     call_stmt->setSigArguments();
                 }
                 m_prog->getProject()->alertSignatureUpdated(func);

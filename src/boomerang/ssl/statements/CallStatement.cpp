@@ -267,13 +267,13 @@ bool CallStatement::search(const Exp &pattern, SharedExp &result) const
         return true;
     }
 
-    for (const SharedStmt stmt : m_defines) {
+    for (const SharedStmt &stmt : m_defines) {
         if (stmt->search(pattern, result)) {
             return true;
         }
     }
 
-    for (const SharedStmt stmt : m_arguments) {
+    for (const SharedStmt &stmt : m_arguments) {
         if (stmt->search(pattern, result)) {
             return true;
         }
@@ -287,13 +287,13 @@ bool CallStatement::searchAll(const Exp &pattern, std::list<SharedExp> &result) 
 {
     bool found = GotoStatement::searchAll(pattern, result);
 
-    for (const SharedStmt def : m_defines) {
+    for (const SharedStmt &def : m_defines) {
         if (def->searchAll(pattern, result)) {
             found = true;
         }
     }
 
-    for (const SharedStmt arg : m_arguments) {
+    for (const SharedStmt &arg : m_arguments) {
         if (arg->searchAll(pattern, result)) {
             found = true;
         }
@@ -415,7 +415,7 @@ void CallStatement::print(OStream &os) const
 
         bool first = true;
 
-        for (const SharedStmt def : m_defines) {
+        for (const SharedStmt &def : m_defines) {
             assert(def->isAssignment());
             std::shared_ptr<const Assignment> asgn = def->as<const Assignment>();
 
@@ -458,7 +458,7 @@ void CallStatement::print(OStream &os) const
     else {
         os << "(\n";
 
-        for (const SharedStmt arg : m_arguments) {
+        for (const SharedStmt &arg : m_arguments) {
             os << "                ";
             std::shared_ptr<const Assignment> a = std::dynamic_pointer_cast<const Assignment>(arg);
             if (a) {

@@ -86,7 +86,7 @@ bool ReturnStatement::definesLoc(SharedExp loc) const
     /// to pretend it does, and this is a place to store the return type(s) for example.
     /// FIXME: seems it would be cleaner to say that Return Statements don't define anything.
 
-    for (const SharedConstStmt &stmt : m_modifieds) {
+    for (const SharedStmt &stmt : m_modifieds) {
         if (stmt->definesLoc(loc)) {
             return true;
         }
@@ -306,7 +306,7 @@ void ReturnStatement::print(OStream &os) const
     bool first = true;
     int column = 19;
 
-    for (const SharedConstStmt &stmt : m_returns) {
+    for (const SharedStmt &stmt : m_returns) {
         QString tgt;
         OStream ost(&tgt);
         stmt->as<const Assignment>()->printCompact(ost);
@@ -343,7 +343,7 @@ void ReturnStatement::print(OStream &os) const
         first  = true;
         column = 25;
 
-        for (const SharedConstStmt &stmt : m_modifieds) {
+        for (const SharedStmt &stmt : m_modifieds) {
             QString tgt2;
             OStream ost(&tgt2);
             std::shared_ptr<const Assignment> asgn = stmt->as<const Assignment>();

@@ -46,7 +46,7 @@ Type::Size CompoundType::getSize() const
 {
     Size size = 0;
 
-    for (const SharedConstType &elem : m_types) {
+    for (const SharedType &elem : m_types) {
         // NOTE: this assumes no padding... perhaps explicit padding will be needed
         size += elem->getSize();
     }

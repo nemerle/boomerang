@@ -2657,7 +2657,7 @@ void CCodeGenerator::writeFragment(const IRFragment *frag)
                 LOG_MSG("%1", rtl->getAddress());
             }
 
-            for (const SharedStmt st : *rtl) {
+            for (const SharedStmt &st : *rtl) {
                 emitCodeForStmt(st);
             }
         }

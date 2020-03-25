@@ -742,7 +742,7 @@ bool UserProc::isLocalOrParamPattern(SharedConstExp e) const
 
 SharedConstExp UserProc::expFromSymbol(const QString &name) const
 {
-    for (const std::pair<SharedConstExp, SharedExp> &it : m_symbolMap) {
+    for (const std::pair<const SharedConstExp, SharedExp> &it : m_symbolMap) {
         const SharedConstExp exp = it.second;
         if (exp->isLocal() && (exp->access<Const, 1>()->getStr() == name)) {
             return it.first;
@@ -1029,7 +1029,7 @@ void UserProc::printSymbolMap(OStream &out) const
         out << "  <None>\n";
     }
     else {
-        for (const std::pair<SharedConstExp, SharedExp> &it : m_symbolMap) {
+        for (const std::pair<const SharedConstExp, SharedExp> &it : m_symbolMap) {
             SharedConstType ty = getTypeForLocation(it.second);
             out << "  " << it.first << " maps to " << it.second << " type "
                 << (ty ? qPrintable(ty->getCtype()) : "<unknown>") << "\n";
@@ -1046,7 +1046,7 @@ void UserProc::printLocals(OStream &os) const
         os << "  <None>\n";
     }
     else {
-        for (const std::pair<QString, SharedType> &local_entry : m_locals) {
+        for (const std::pair<const QString, SharedType> &local_entry : m_locals) {
             os << local_entry.second->getCtype() << " " << local_entry.first << " ";
             SharedConstExp e = expFromSymbol(local_entry.first);
 

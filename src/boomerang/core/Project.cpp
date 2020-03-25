@@ -300,7 +300,7 @@ IFrontEnd *Project::createFrontEnd()
 void Project::loadSymbols()
 {
     // Add symbols from -s switch(es)
-    for (const std::pair<Address, QString> &elem : getSettings()->m_symbolMap) {
+    for (const std::pair<const Address, QString> &elem : getSettings()->m_symbolMap) {
         m_loadedBinary->getSymbols()->createSymbol(elem.first, elem.second);
     }
 
