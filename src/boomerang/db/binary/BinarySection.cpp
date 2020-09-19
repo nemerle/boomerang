@@ -19,7 +19,7 @@
 
 struct VariantHolder
 {
-    mutable QVariantMap val;
+    mutable QMultiMap<QString, QVariant> val;
     QVariantMap &get() const { return val; }
     VariantHolder &operator+=(const VariantHolder &other)
     {
@@ -80,18 +80,18 @@ public:
 
     QVariantMap getAttributesForRange(Address from, Address to)
     {
-        QVariantMap res;
+        QMultiMap<QString, QVariant> res;
         auto v = m_attributeMap.equalRange(from, to);
 
         if (v.first == m_attributeMap.end()) {
-            return res;
+            return std::move(res);
         }
 
         for (auto iter = v.first; iter != v.second; ++iter) {
             res.unite(iter->second.get());
         }
 
-        return res;
+        return std::move(res);
     }
 
 public:
